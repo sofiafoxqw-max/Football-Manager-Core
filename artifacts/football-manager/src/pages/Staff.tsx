@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetStaff, useGetStaffMarket, useHireStaff } from "@workspace/api-client-react";
+import { useGetStaff, useGetStaffMarket, useHireStaff, useGetFinances } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserCog, Star, Plus, Check } from "lucide-react";
 
@@ -36,11 +36,17 @@ function RatingStars({ rating }: { rating: number }) {
 export default function Staff() {
   const { data: staff } = useGetStaff();
   const { data: market } = useGetStaffMarket();
+  const { data: finances } = useGetFinances();
   const hireStaff = useHireStaff();
   const qc = useQueryClient();
   const [tab, setTab] = useState<"current" | "market">("current");
   const [hiring, setHiring] = useState<number | null>(null);
   const [hireError, setHireError] = useState<string | null>(null);
+
+  const budget = finances?.balance ?? null;
+
+  const canAfford = (weeklySalary: number) =>
+    budget === null || budget >= weeklySalary * 52;
 
   const handleHire = async (staffId: number) => {
     setHiring(staffId);
@@ -49,6 +55,7 @@ export default function Staff() {
       await hireStaff.mutateAsync({ data: { staffId } });
       qc.invalidateQueries({ queryKey: ["getStaff"] });
       qc.invalidateQueries({ queryKey: ["getStaffMarket"] });
+      qc.invalidateQueries({ queryKey: ["getFinances"] });
     } catch (err: any) {
       const msg = err?.errorData?.error ?? err?.message ?? "Failed to hire staff member.";
       setHireError(msg);
@@ -67,40 +74,56 @@ export default function Staff() {
           <th>Speciality</th>
           <th>Rating</th>
           <th>Wage (pw)</th>
+          {showHire && <th>Annual cost</th>}
           {showHire && <th></th>}
         </tr>
       </thead>
       <tbody>
-        {members?.map((s: any) => (
-          <tr key={s.id}>
-            <td><span style={{ color: "var(--fm-text)", fontWeight: 500 }}>{s.name}</span></td>
-            <td>
-              <span className="fm-badge" style={{ background: (roleColors[s.role] ?? "#3b82f6") + "22", color: roleColors[s.role] ?? "#3b82f6" }}>
-                {roleLabels[s.role] ?? s.role}
-              </span>
-            </td>
-            <td><span style={{ color: "var(--fm-muted)" }}>{s.nationality}</span></td>
-            <td><span style={{ color: "var(--fm-muted)" }}>{s.speciality}</span></td>
-            <td>
-              <div className="flex items-center gap-2">
-                <RatingStars rating={s.rating} />
-                <span className="text-xs" style={{ color: "var(--fm-text)" }}>{s.rating}/10</span>
-              </div>
-            </td>
-            <td><span style={{ color: "#34d399" }}>£{s.weeklySalary.toLocaleString()}</span></td>
-            {showHire && (
+        {members?.map((s: any) => {
+          const affordable = canAfford(s.weeklySalary);
+          return (
+            <tr key={s.id} style={{ opacity: showHire && !affordable ? 0.5 : 1 }}>
+              <td><span style={{ color: "var(--fm-text)", fontWeight: 500 }}>{s.name}</span></td>
               <td>
-                <button className="fm-btn fm-btn-primary" style={{ padding: "2px 10px", fontSize: "11px" }}
-                  onClick={() => handleHire(s.id)} disabled={hiring === s.id}>
-                  <Plus className="w-3 h-3" />
-                  {hiring === s.id ? "Hiring..." : "Hire"}
-                </button>
+                <span className="fm-badge" style={{ background: (roleColors[s.role] ?? "#3b82f6") + "22", color: roleColors[s.role] ?? "#3b82f6" }}>
+                  {roleLabels[s.role] ?? s.role}
+                </span>
               </td>
-            )}
-          </tr>
-        ))}
+              <td><span style={{ color: "var(--fm-muted)" }}>{s.nationality}</span></td>
+              <td><span style={{ color: "var(--fm-muted)" }}>{s.speciality}</span></td>
+              <td>
+                <div className="flex items-center gap-2">
+                  <RatingStars rating={s.rating} />
+                  <span className="text-xs" style={{ color: "var(--fm-text)" }}>{s.rating}/10</span>
+                </div>
+              </td>
+              <td><span style={{ color: "#34d399" }}>£{s.weeklySalary.toLocaleString()}/wk</span></td>
+              {showHire && (
+                <td>
+                  <span style={{ color: affordable ? "var(--fm-muted)" : "#ef4444", fontSize: "11px" }}>
+                    £{(s.weeklySalary * 52).toLocaleString()}/yr
+                  </span>
+                </td>
+              )}
+              {showHire && (
+                <td>
+                  <button
+                    className="fm-btn fm-btn-primary"
+                    style={{ padding: "2px 10px", fontSize: "11px", opacity: affordable ? 1 : 0.4, cursor: affordable ? "pointer" : "not-allowed" }}
+                    onClick={() => affordable && handleHire(s.id)}
+                    disabled={hiring === s.id || !affordable}
+                    title={!affordable ? `Need £${(s.weeklySalary * 52).toLocaleString()} annual budget` : undefined}
+                  >
+                    <Plus className="w-3 h-3" />
+                    {hiring === s.id ? "Hiring..." : affordable ? "Hire" : "Can't afford"}
+                  </button>
+                </td>
+              )}
+            </tr>
+          );
+        })}
         {!members?.length && (
-          <tr><td colSpan={showHire ? 7 : 6} style={{ textAlign: "center", color: "var(--fm-muted)", padding: "24px" }}>
+          <tr><td colSpan={showHire ? 8 : 6} style={{ textAlign: "center", color: "var(--fm-muted)", padding: "24px" }}>
             {showHire ? "No staff available in the market." : "No staff hired yet. Check the market."}
           </td></tr>
         )}
