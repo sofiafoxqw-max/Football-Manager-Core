@@ -5,26 +5,26 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, ChevronDown, Trophy, Target, Zap, Users, BarChart2, Shield } from "lucide-react";
 
 const FEATURES = [
-  { icon: Trophy, title: "Full Season Campaign", desc: "38-game Premier League season with promotion, relegation, and cup glory on the line." },
-  { icon: Target, title: "Tactical Control", desc: "Shape your formation, set-pieces, pressing intensity, and mentality to outfox every opponent." },
-  { icon: Zap, title: "Live Match Engine", desc: "Detailed minute-by-minute commentary, player ratings, and real-time momentum shifts." },
-  { icon: Users, title: "Squad Management", desc: "Negotiate contracts, scout talent, manage injuries and morale across your entire squad." },
-  { icon: BarChart2, title: "Transfer Market", desc: "Buy, sell and loan players. Manage your wage budget and build your dream team." },
-  { icon: Shield, title: "Staff & Training", desc: "Hire coaches, physios and analysts. Design training plans to peak at the right moment." },
+  { icon: Trophy, title: "Полный сезон", desc: "38 матчей Премьер-лиги — борьба за чемпионство, еврокубки или выживание." },
+  { icon: Target, title: "Тактический контроль", desc: "Формации, стандарты, прессинг, стиль игры — настрой всё под свой стиль." },
+  { icon: Zap, title: "Живые матчи", desc: "Подробный комментарий, рейтинги игроков и смена momentum в реальном времени." },
+  { icon: Users, title: "Управление составом", desc: "Контракты, травмы, моральный дух — держи всю команду в тонусе." },
+  { icon: BarChart2, title: "Трансферный рынок", desc: "Покупай, продавай, отдавай в аренду. Собирай команду мечты в рамках бюджета." },
+  { icon: Shield, title: "Персонал и тренировки", desc: "Нанимай тренеров, физиотерапевтов и аналитиков. Выходи на пик в нужный момент." },
 ];
 
 const STATS = [
-  { value: "20", label: "Premier League Clubs" },
-  { value: "500+", label: "Players" },
-  { value: "38", label: "Matchdays" },
-  { value: "∞", label: "Possible Careers" },
+  { value: "20", label: "Клубов Премьер-лиги" },
+  { value: "500+", label: "Игроков" },
+  { value: "38", label: "Туров" },
+  { value: "∞", label: "Карьерных путей" },
 ];
 
 function tierBadge(prestige: number) {
-  if (prestige >= 5) return { label: "Elite", color: "#f59e0b" };
-  if (prestige >= 4) return { label: "Top Flight", color: "#60a5fa" };
-  if (prestige >= 3) return { label: "Established", color: "#34d399" };
-  return { label: "Rising", color: "#94a3b8" };
+  if (prestige >= 5) return { label: "Элита", color: "#f59e0b" };
+  if (prestige >= 4) return { label: "Топ-клуб", color: "#60a5fa" };
+  if (prestige >= 3) return { label: "Середняк", color: "#34d399" };
+  return { label: "Новичок", color: "#94a3b8" };
 }
 
 function PrestigeStars({ n }: { n: number }) {
@@ -52,7 +52,7 @@ export default function ClubSelection() {
 
   const handleStart = async () => {
     if (!selectedClub || !managerName.trim()) {
-      setError("Please select a club and enter your manager name.");
+      setError("Выбери клуб и введи имя менеджера.");
       return;
     }
     setStarting(true);
@@ -62,7 +62,7 @@ export default function ClubSelection() {
       queryClient.invalidateQueries({ queryKey: getGetGameStateQueryKey() });
       setLocation("/dashboard");
     } catch {
-      setError("Failed to start game. Please try again.");
+      setError("Не удалось начать игру. Попробуй ещё раз.");
       setStarting(false);
     }
   };
@@ -75,7 +75,7 @@ export default function ClubSelection() {
     <div className="min-h-screen flex items-center justify-center" style={{ background: "#080c14" }}>
       <div className="text-center space-y-3">
         <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto font-black" style={{ background: "#3b82f6" }}>FM</div>
-        <div style={{ color: "#4a6080", fontSize: 13 }}>Loading…</div>
+        <div style={{ color: "#4a6080", fontSize: 13 }}>Загрузка…</div>
       </div>
     </div>
   );
@@ -115,13 +115,13 @@ export default function ClubSelection() {
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 15, color: "#fff" }}>FM</div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "#d1d9e6" }}>Football Manager</div>
-                <div style={{ fontSize: 11, color: "#4a6080" }}>Season 2025/26</div>
+                <div style={{ fontSize: 11, color: "#4a6080" }}>Сезон 2025/26</div>
               </div>
             </div>
             <button
               onClick={() => setPhase("select")}
               style={{ background: "transparent", border: "1px solid #1e2d42", borderRadius: 6, padding: "8px 20px", color: "#8aa4c8", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
-              Start Now →
+              Начать →
             </button>
           </nav>
 
@@ -136,13 +136,13 @@ export default function ClubSelection() {
             </div>
 
             <h1 style={{ fontSize: "clamp(42px, 7vw, 80px)", fontWeight: 900, lineHeight: 1.05, marginBottom: 24, letterSpacing: "-0.03em" }}>
-              <span style={{ color: "#d1d9e6" }}>Your club.</span><br />
-              <span style={{ color: "#3b82f6" }}>Your rules.</span><br />
-              <span style={{ color: "#d1d9e6" }}>Your glory.</span>
+              <span style={{ color: "#d1d9e6" }}>Твой клуб.</span><br />
+              <span style={{ color: "#3b82f6" }}>Твои правила.</span><br />
+              <span style={{ color: "#d1d9e6" }}>Твоя слава.</span>
             </h1>
 
             <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "#4a6080", maxWidth: 560, lineHeight: 1.7, marginBottom: 40 }}>
-              Take the dugout, craft your tactics, and guide a Premier League club from pre-season to title — or fight tooth and nail to survive relegation.
+              Займи место на скамейке запасных, выстрой свою тактику и веди клуб Премьер-лиги от предсезонки до чемпионства — или борись до последнего за выживание.
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
@@ -154,7 +154,7 @@ export default function ClubSelection() {
                   display: "flex", alignItems: "center", gap: 8,
                   boxShadow: "0 0 32px rgba(59,130,246,0.35)"
                 }}>
-                Choose Your Club <ChevronRight size={18} />
+                Выбрать клуб <ChevronRight size={18} />
               </button>
             </div>
 
@@ -171,15 +171,15 @@ export default function ClubSelection() {
 
           {/* Scroll hint */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 32, gap: 6, position: "relative", zIndex: 10 }}>
-            <span style={{ fontSize: 11, color: "#4a6080", letterSpacing: "0.1em" }}>SCROLL TO EXPLORE</span>
+            <span style={{ fontSize: 11, color: "#4a6080", letterSpacing: "0.1em" }}>ПРОКРУТИ ВНИЗ</span>
             <ChevronDown size={16} style={{ color: "#4a6080" }} />
           </div>
 
           {/* Features section */}
           <div style={{ background: "#0b1120", borderTop: "1px solid #1e2d42", padding: "80px clamp(24px, 6vw, 80px)" }}>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ fontSize: 12, color: "#3b82f6", fontWeight: 700, letterSpacing: "0.15em", marginBottom: 12 }}>EVERYTHING YOU NEED</div>
-              <h2 style={{ fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800, color: "#d1d9e6", letterSpacing: "-0.02em" }}>The complete managerial experience</h2>
+              <div style={{ fontSize: 12, color: "#3b82f6", fontWeight: 700, letterSpacing: "0.15em", marginBottom: 12 }}>ВСЁ ЧТО НУЖНО</div>
+              <h2 style={{ fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800, color: "#d1d9e6", letterSpacing: "-0.02em" }}>Полный опыт главного тренера</h2>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, maxWidth: 1100, margin: "0 auto" }}>
@@ -207,9 +207,9 @@ export default function ClubSelection() {
                   display: "inline-flex", alignItems: "center", gap: 8,
                   boxShadow: "0 0 32px rgba(59,130,246,0.3)"
                 }}>
-                Start Your Career <ChevronRight size={18} />
+                Начать карьеру <ChevronRight size={18} />
               </button>
-              <div style={{ fontSize: 12, color: "#4a6080", marginTop: 12 }}>Free to play · No account required · Instant start</div>
+              <div style={{ fontSize: 12, color: "#4a6080", marginTop: 12 }}>Бесплатно · Без регистрации · Мгновенный старт</div>
             </div>
           </div>
         </div>
@@ -222,11 +222,11 @@ export default function ClubSelection() {
           {/* Header */}
           <div style={{ background: "#0c1220", borderBottom: "1px solid #1e2d42", padding: "16px 32px", display: "flex", alignItems: "center", gap: 16, position: "sticky", top: 0, zIndex: 20 }}>
             <button onClick={() => setPhase("hero")} style={{ background: "transparent", border: "none", color: "#4a6080", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", gap: 4 }}>
-              ← Back
+              ← Назад
             </button>
             <div style={{ width: 1, height: 20, background: "#1e2d42" }} />
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#d1d9e6" }}>Choose Your Club</div>
-            <div style={{ marginLeft: "auto", fontSize: 12, color: "#4a6080" }}>Premier League 2025/26</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#d1d9e6" }}>Выбери клуб</div>
+            <div style={{ marginLeft: "auto", fontSize: 12, color: "#4a6080" }}>Премьер-лига 2025/26</div>
           </div>
 
           <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
@@ -237,7 +237,7 @@ export default function ClubSelection() {
               <div style={{ marginBottom: 20 }}>
                 <input
                   type="text"
-                  placeholder="Search clubs…"
+                  placeholder="Поиск клубов…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   style={{
@@ -285,9 +285,9 @@ export default function ClubSelection() {
 
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                         {[
-                          { label: "Budget", value: `£${((club.budget ?? 0) / 1_000_000).toFixed(1)}M`, color: "#34d399" },
-                          { label: "Prestige", value: <PrestigeStars n={(club as any).prestige ?? 3} />, color: "#f59e0b" },
-                          { label: "Squad", value: (club as any).squadSize ?? 25, color: "#60a5fa" },
+                          { label: "Бюджет", value: `£${((club.budget ?? 0) / 1_000_000).toFixed(1)}M`, color: "#34d399" },
+                          { label: "Престиж", value: <PrestigeStars n={(club as any).prestige ?? 3} />, color: "#f59e0b" },
+                          { label: "Состав", value: (club as any).squadSize ?? 25, color: "#60a5fa" },
                         ].map(({ label, value, color }) => (
                           <div key={label} style={{ background: "#0b1120", borderRadius: 6, padding: "8px 6px", textAlign: "center" }}>
                             <div style={{ color, fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{value}</div>
@@ -301,7 +301,7 @@ export default function ClubSelection() {
 
                 {filtered.length === 0 && (
                   <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "48px 0", color: "#4a6080" }}>
-                    No clubs found for "{search}"
+                    Клубы не найдены: «{search}»
                   </div>
                 )}
               </div>
@@ -313,24 +313,24 @@ export default function ClubSelection() {
               {!selectedClub ? (
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 12 }}>
                   <div style={{ width: 64, height: 64, borderRadius: 16, background: "#111827", border: "1px dashed #1e2d42", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>⚽</div>
-                  <div style={{ fontWeight: 600, color: "#d1d9e6", fontSize: 15 }}>Select a club</div>
-                  <div style={{ fontSize: 13, color: "#4a6080", lineHeight: 1.6 }}>Click any club from the grid to see its details and begin your managerial career.</div>
+                  <div style={{ fontWeight: 600, color: "#d1d9e6", fontSize: 15 }}>Выбери клуб</div>
+                  <div style={{ fontSize: 13, color: "#4a6080", lineHeight: 1.6 }}>Нажми на любой клуб из списка, чтобы увидеть детали и начать карьеру тренера.</div>
                 </div>
               ) : (
                 <>
                   {/* Club detail */}
                   <div style={{ background: "#111827", border: "1px solid #1e2d42", borderRadius: 10, padding: 20 }}>
-                    <div style={{ fontSize: 10, color: "#4a6080", fontWeight: 700, letterSpacing: "0.12em", marginBottom: 10 }}>SELECTED CLUB</div>
+                    <div style={{ fontSize: 10, color: "#4a6080", fontWeight: 700, letterSpacing: "0.12em", marginBottom: 10 }}>ВЫБРАННЫЙ КЛУБ</div>
                     <div style={{ fontWeight: 800, fontSize: 20, color: "#d1d9e6", marginBottom: 4 }}>{selectedClub.name}</div>
                     <div style={{ fontSize: 12, color: "#4a6080", marginBottom: 12, lineHeight: 1.5 }}>
                       {(selectedClub.description ?? "").substring(0, 120)}…
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                       {[
-                        { label: "Transfer Budget", value: `£${((selectedClub.budget ?? 0) / 1_000_000).toFixed(1)}M`, color: "#34d399" },
-                        { label: "Stadium", value: selectedClub.stadium ?? "—", color: "#d1d9e6" },
-                        { label: "Prestige", value: <PrestigeStars n={selectedClub.prestige ?? 3} />, color: "#f59e0b" },
-                        { label: "League", value: "Premier League", color: "#60a5fa" },
+                        { label: "Трансф. бюджет", value: `£${((selectedClub.budget ?? 0) / 1_000_000).toFixed(1)}M`, color: "#34d399" },
+                        { label: "Стадион", value: selectedClub.stadium ?? "—", color: "#d1d9e6" },
+                        { label: "Престиж", value: <PrestigeStars n={selectedClub.prestige ?? 3} />, color: "#f59e0b" },
+                        { label: "Лига", value: "Премьер-лига", color: "#60a5fa" },
                       ].map(({ label, value, color }) => (
                         <div key={label} style={{ background: "#0b1120", borderRadius: 6, padding: 10 }}>
                           <div style={{ fontSize: 10, color: "#4a6080", marginBottom: 4 }}>{label}</div>
@@ -342,10 +342,10 @@ export default function ClubSelection() {
 
                   {/* Manager name */}
                   <div>
-                    <label style={{ display: "block", fontSize: 12, color: "#4a6080", fontWeight: 600, marginBottom: 8 }}>YOUR MANAGER NAME</label>
+                    <label style={{ display: "block", fontSize: 12, color: "#4a6080", fontWeight: 600, marginBottom: 8 }}>ИМЯ МЕНЕДЖЕРА</label>
                     <input
                       type="text"
-                      placeholder="e.g. Alex Ferguson"
+                      placeholder="напр. Алекс Фергюсон"
                       value={managerName}
                       onChange={e => { setManagerName(e.target.value); setError(""); }}
                       onKeyDown={e => e.key === "Enter" && handleStart()}
@@ -373,12 +373,12 @@ export default function ClubSelection() {
                       transition: "all 0.15s",
                       boxShadow: !starting && managerName.trim() ? "0 0 24px rgba(59,130,246,0.3)" : "none",
                     }}>
-                    {starting ? "Starting season…" : "Begin Season"}
+                    {starting ? "Запускаем сезон…" : "Начать сезон"}
                     {!starting && <ChevronRight size={18} />}
                   </button>
 
                   <div style={{ fontSize: 11, color: "#4a6080", textAlign: "center" }}>
-                    You can change tactics and settings once the game begins.
+                    Тактику и настройки можно изменить после начала игры.
                   </div>
                 </>
               )}
