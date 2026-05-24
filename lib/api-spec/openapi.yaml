@@ -1,29 +1,22 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.1.0
-  description: Football Manager 26 API
+  version: 0.2.0
+  description: Global Football Capital — multi-player football economy platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-  - name: game
-  - name: squad
-  - name: tactics
-  - name: fixtures
-  - name: league
-  - name: transfers
-  - name: inbox
-  - name: finances
-  - name: training
-  - name: injuries
-  - name: scouting
+  - name: auth
+  - name: clubs
+  - name: leagues
+  - name: players
   - name: contracts
-  - name: setpieces
-  - name: staff
-  - name: matchday
-  - name: pressconf
+  - name: transfers
+  - name: economy
+  - name: dashboard
+
 paths:
   /healthz:
     get:
@@ -37,61 +30,124 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /game/state:
+  # ── Auth / Profile ────────────────────────────────────────────────────────
+  /auth/me:
     get:
-      operationId: getGameState
-      tags: [game]
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
       responses:
         "200":
-          description: Current game state
+          description: Current user
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
-        "404":
-          description: Not found
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /game/setup:
+  /auth/register:
     post:
-      operationId: setupGame
-      tags: [game]
+      operationId: registerUser
+      tags: [auth]
+      summary: Register user (pick role and display name)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/GameSetupInput"
+              $ref: "#/components/schemas/RegisterInput"
       responses:
         "201":
-          description: Game created
+          description: Registered
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
-  /game/advance:
-    post:
-      operationId: advanceGame
-      tags: [game]
+  # ── Leagues ───────────────────────────────────────────────────────────────
+  /leagues:
+    get:
+      operationId: listLeagues
+      tags: [leagues]
+      summary: List all leagues with entry cost and prize pools
       responses:
         "200":
-          description: Advanced
+          description: Leagues
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
+                type: array
+                items:
+                  $ref: "#/components/schemas/League"
 
-  /game/clubs:
+  /leagues/{id}:
+    get:
+      operationId: getLeague
+      tags: [leagues]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: League
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeagueDetail"
+
+  /leagues/{id}/standings:
+    get:
+      operationId: getLeagueStandings
+      tags: [leagues]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Standings table
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StandingRow"
+
+  # ── Clubs ─────────────────────────────────────────────────────────────────
+  /clubs:
     get:
       operationId: listClubs
-      tags: [game]
+      tags: [clubs]
+      summary: Browse all clubs
+      parameters:
+        - name: leagueId
+          in: query
+          schema:
+            type: integer
+        - name: available
+          in: query
+          description: Only clubs without an owner
+          schema:
+            type: boolean
       responses:
         "200":
-          description: All clubs
+          description: Clubs
           content:
             application/json:
               schema:
@@ -99,13 +155,179 @@ paths:
                 items:
                   $ref: "#/components/schemas/Club"
 
-  /squad:
+  /clubs/{id}:
     get:
-      operationId: getSquad
-      tags: [squad]
+      operationId: getClub
+      tags: [clubs]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
         "200":
-          description: Squad
+          description: Club detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubDetail"
+
+  /clubs/{id}/buy:
+    post:
+      operationId: buyClub
+      tags: [clubs]
+      summary: Owner purchases a club (costs GFC coins)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Club acquired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubDetail"
+        "400":
+          description: Insufficient funds or already owned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs/{id}/hire-coach:
+    post:
+      operationId: hireCoach
+      tags: [clubs]
+      summary: Owner hires a coach for their club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HireCoachInput"
+      responses:
+        "200":
+          description: Coach hired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubDetail"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs/{id}/fire-coach:
+    post:
+      operationId: fireCoach
+      tags: [clubs]
+      summary: Owner fires the current coach (penalty applies)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Coach fired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubDetail"
+
+  /clubs/{id}/upgrade:
+    post:
+      operationId: upgradeClub
+      tags: [clubs]
+      summary: Owner upgrades infrastructure (stadium, academy, training)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpgradeInput"
+      responses:
+        "200":
+          description: Upgraded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubDetail"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs/my:
+    get:
+      operationId: getMyClub
+      tags: [clubs]
+      summary: Get the club the current user owns or coaches
+      responses:
+        "200":
+          description: My club
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubDetail"
+        "404":
+          description: No club
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Players ───────────────────────────────────────────────────────────────
+  /players:
+    get:
+      operationId: listPlayers
+      tags: [players]
+      summary: Browse free agents and listed players
+      parameters:
+        - name: clubId
+          in: query
+          schema:
+            type: integer
+        - name: freeAgent
+          in: query
+          schema:
+            type: boolean
+        - name: position
+          in: query
+          schema:
+            type: string
+        - name: maxAge
+          in: query
+          schema:
+            type: integer
+        - name: minOverall
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Players
           content:
             application/json:
               schema:
@@ -116,7 +338,7 @@ paths:
   /players/{id}:
     get:
       operationId: getPlayer
-      tags: [squad]
+      tags: [players]
       parameters:
         - name: id
           in: path
@@ -130,107 +352,91 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Player"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
-  /players/{id}/transfer-list:
-    post:
-      operationId: toggleTransferList
-      tags: [squad]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TransferListToggleInput"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Player"
-
-  /tactics:
+  # ── Contracts ─────────────────────────────────────────────────────────────
+  /contracts:
     get:
-      operationId: getTactics
-      tags: [tactics]
+      operationId: listContracts
+      tags: [contracts]
+      summary: List all contracts for my club
       responses:
         "200":
-          description: Tactics
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Tactics"
-    put:
-      operationId: updateTactics
-      tags: [tactics]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TacticsInput"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Tactics"
-
-  /fixtures:
-    get:
-      operationId: listFixtures
-      tags: [fixtures]
-      parameters:
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [scheduled, completed]
-      responses:
-        "200":
-          description: Fixtures
+          description: Contracts
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Fixture"
+                  $ref: "#/components/schemas/Contract"
 
-  /fixtures/{id}:
+  /contracts/coach-offers:
     get:
-      operationId: getFixture
-      tags: [fixtures]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      operationId: listCoachOffers
+      tags: [contracts]
+      summary: Coach sees incoming job offers from owners
       responses:
         "200":
-          description: Fixture detail
+          description: Offers
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FixtureDetail"
+                type: array
+                items:
+                  $ref: "#/components/schemas/CoachOffer"
 
-  /fixtures/{id}/simulate:
+  /contracts/coach-offers/{id}/respond:
     post:
-      operationId: simulateMatch
-      tags: [fixtures]
+      operationId: respondToCoachOffer
+      tags: [contracts]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferResponseInput"
+      responses:
+        "200":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoachOffer"
+
+  /contracts/player:
+    post:
+      operationId: signPlayerContract
+      tags: [contracts]
+      summary: Sign a player (coach action)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerContractInput"
+      responses:
+        "201":
+          description: Signed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /contracts/{id}/terminate:
+    post:
+      operationId: terminateContract
+      tags: [contracts]
       parameters:
         - name: id
           in: path
@@ -239,79 +445,34 @@ paths:
             type: integer
       responses:
         "200":
-          description: Match result
+          description: Terminated (buyout deducted)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FixtureDetail"
+                $ref: "#/components/schemas/SuccessResponse"
 
-  /fixtures/{id}/live:
-    get:
-      operationId: getLiveMatch
-      tags: [matchday]
-      summary: Get live match simulation with commentary
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Live match data
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LiveMatch"
-
-  /league:
-    get:
-      operationId: getLeagueStandings
-      tags: [league]
-      responses:
-        "200":
-          description: Standings
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LeagueTable"
-
-  /stats/season:
-    get:
-      operationId: getSeasonStats
-      tags: [league]
-      responses:
-        "200":
-          description: Season stats
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SeasonStats"
-
+  # ── Transfers ─────────────────────────────────────────────────────────────
   /transfers/market:
     get:
       operationId: getTransferMarket
       tags: [transfers]
+      summary: Browse listed players on transfer market
       parameters:
         - name: position
           in: query
           schema:
             type: string
-        - name: maxValue
+        - name: maxPrice
           in: query
           schema:
             type: integer
-        - name: minOverall
-          in: query
-          schema:
-            type: integer
-        - name: maxAge
+        - name: leagueId
           in: query
           schema:
             type: integer
       responses:
         "200":
-          description: Market
+          description: Market listings
           content:
             application/json:
               schema:
@@ -319,28 +480,55 @@ paths:
                 items:
                   $ref: "#/components/schemas/TransferListing"
 
-  /transfers/offer:
+  /transfers/bid:
     post:
-      operationId: makeTransferOffer
+      operationId: placeBid
       tags: [transfers]
+      summary: Coach bids for a player
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransferOfferInput"
+              $ref: "#/components/schemas/BidInput"
       responses:
         "200":
-          description: Result
+          description: Bid placed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TransferResult"
+                $ref: "#/components/schemas/TransferBid"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
-  /transfers:
-    get:
-      operationId: listTransfers
+  /transfers/list-player:
+    post:
+      operationId: listPlayerForTransfer
       tags: [transfers]
+      summary: Coach lists a player for transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListPlayerInput"
+      responses:
+        "200":
+          description: Listed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferListing"
+
+  /transfers/history:
+    get:
+      operationId: getTransferHistory
+      tags: [transfers]
+      summary: Recent transfers across all clubs
       responses:
         "200":
           description: History
@@ -349,353 +537,96 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransferRecord"
 
-  /inbox:
+  # ── Economy ───────────────────────────────────────────────────────────────
+  /economy/summary:
     get:
-      operationId: listInboxMessages
-      tags: [inbox]
+      operationId: getEconomySummary
+      tags: [economy]
+      summary: Platform-wide economic snapshot (total money, transactions, tax pool)
       responses:
         "200":
-          description: Messages
+          description: Economy summary
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/InboxMessage"
+                $ref: "#/components/schemas/EconomySummary"
 
-  /inbox/{id}/read:
-    post:
-      operationId: markMessageRead
-      tags: [inbox]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/InboxMessage"
-
-  /finances:
+  /economy/my-finances:
     get:
-      operationId: getFinances
-      tags: [finances]
+      operationId: getMyFinances
+      tags: [economy]
+      summary: Current user's wallet and recent transactions
       responses:
         "200":
           description: Finances
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Finances"
+                $ref: "#/components/schemas/MyFinances"
 
-  /training:
+  /economy/transactions:
     get:
-      operationId: getTrainingSchedule
-      tags: [training]
-      responses:
-        "200":
-          description: Training schedule
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TrainingSchedule"
-    put:
-      operationId: updateTrainingSchedule
-      tags: [training]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TrainingScheduleInput"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TrainingSchedule"
-
-  /training/individual:
-    get:
-      operationId: getIndividualTraining
-      tags: [training]
-      responses:
-        "200":
-          description: Individual training assignments
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/IndividualTraining"
-    put:
-      operationId: updateIndividualTraining
-      tags: [training]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/IndividualTrainingInput"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/IndividualTraining"
-
-  /injuries:
-    get:
-      operationId: listInjuries
-      tags: [injuries]
-      responses:
-        "200":
-          description: Injured players
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Injury"
-
-  /shortlist:
-    get:
-      operationId: getShortlist
-      tags: [scouting]
-      responses:
-        "200":
-          description: Shortlisted players
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ShortlistEntry"
-    post:
-      operationId: addToShortlist
-      tags: [scouting]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ShortlistInput"
-      responses:
-        "201":
-          description: Added
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ShortlistEntry"
-
-  /shortlist/{playerId}:
-    delete:
-      operationId: removeFromShortlist
-      tags: [scouting]
+      operationId: listTransactions
+      tags: [economy]
+      summary: My transaction history
       parameters:
-        - name: playerId
-          in: path
-          required: true
+        - name: limit
+          in: query
           schema:
             type: integer
       responses:
         "200":
-          description: Removed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessResponse"
-
-  /scouts/search:
-    post:
-      operationId: scoutSearch
-      tags: [scouting]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ScoutSearchInput"
-      responses:
-        "200":
-          description: Scout results
+          description: Transactions
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ScoutReport"
+                  $ref: "#/components/schemas/Transaction"
 
-  /contracts:
+  # ── Dashboard ─────────────────────────────────────────────────────────────
+  /dashboard:
     get:
-      operationId: listContracts
-      tags: [contracts]
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Role-aware dashboard — summary stats for owner or coach
       responses:
         "200":
-          description: Expiring contracts
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+
+  /dashboard/activity:
+    get:
+      operationId: getActivity
+      tags: [dashboard]
+      summary: Recent platform activity feed
+      responses:
+        "200":
+          description: Activity
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ContractSummary"
+                  $ref: "#/components/schemas/ActivityItem"
 
-  /contracts/{playerId}/offer:
-    post:
-      operationId: offerContractRenewal
-      tags: [contracts]
-      parameters:
-        - name: playerId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ContractOfferInput"
-      responses:
-        "200":
-          description: Contract result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ContractResult"
-
-  /set-pieces:
+  /dashboard/leaderboard:
     get:
-      operationId: getSetPieces
-      tags: [setpieces]
+      operationId: getLeaderboard
+      tags: [dashboard]
+      summary: Top owners by club value, top coaches by win rate
       responses:
         "200":
-          description: Set piece instructions
+          description: Leaderboard
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SetPieces"
-    put:
-      operationId: updateSetPieces
-      tags: [setpieces]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SetPiecesInput"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SetPieces"
-
-  /staff:
-    get:
-      operationId: getStaff
-      tags: [staff]
-      responses:
-        "200":
-          description: Staff list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/StaffMember"
-
-  /staff/market:
-    get:
-      operationId: getStaffMarket
-      tags: [staff]
-      responses:
-        "200":
-          description: Available staff
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/StaffMember"
-
-  /staff/hire:
-    post:
-      operationId: hireStaff
-      tags: [staff]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/HireStaffInput"
-      responses:
-        "200":
-          description: Hired
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StaffMember"
-
-  /press-conference:
-    get:
-      operationId: getPressConference
-      tags: [pressconf]
-      responses:
-        "200":
-          description: Current press conference questions
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PressConference"
-
-  /press-conference/answer:
-    post:
-      operationId: answerPressConference
-      tags: [pressconf]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PressAnswerInput"
-      responses:
-        "200":
-          description: Morale effect
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PressAnswerResult"
-
-  /team-talk:
-    post:
-      operationId: giveTeamTalk
-      tags: [matchday]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TeamTalkInput"
-      responses:
-        "200":
-          description: Team talk result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TeamTalkResult"
+                $ref: "#/components/schemas/Leaderboard"
 
 components:
   schemas:
@@ -722,58 +653,122 @@ components:
           type: string
       required: [success, message]
 
-    GameState:
+    # ── Users ───────────────────────────────────────────────────────────────
+    UserProfile:
       type: object
       properties:
-        started:
-          type: boolean
+        id:
+          type: string
+        clerkId:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [owner, coach, unregistered]
+        balance:
+          type: integer
+          description: GFC coins
+        reputation:
+          type: integer
         clubId:
           type: ["integer", "null"]
         clubName:
           type: ["string", "null"]
-        managerName:
-          type: ["string", "null"]
-        leagueName:
-          type: ["string", "null"]
-        currentDate:
-          type: ["string", "null"]
-        currentWeek:
-          type: ["integer", "null"]
-        totalWeeks:
-          type: ["integer", "null"]
-        season:
-          type: ["integer", "null"]
-        leaguePosition:
-          type: ["integer", "null"]
-        points:
-          type: ["integer", "null"]
-        nextFixtureId:
-          type: ["integer", "null"]
-        nextFixtureOpponent:
-          type: ["string", "null"]
-        nextFixtureDate:
-          type: ["string", "null"]
-        nextFixtureIsHome:
-          type: ["boolean", "null"]
-        unreadMessages:
-          type: integer
-        transferBudget:
-          type: ["integer", "null"]
-        injuredCount:
-          type: integer
-        morale:
+        createdAt:
           type: string
-      required: [started, unreadMessages, morale, injuredCount]
+      required: [id, clerkId, displayName, role, balance, reputation, createdAt]
 
-    GameSetupInput:
+    RegisterInput:
       type: object
       properties:
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [owner, coach]
+      required: [displayName, role]
+
+    # ── Leagues ─────────────────────────────────────────────────────────────
+    League:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        country:
+          type: string
+        tier:
+          type: integer
+        entryFee:
+          type: integer
+          description: Cost in GFC coins for owner to join
+        prizePool:
+          type: integer
+        totalClubs:
+          type: integer
+        activeOwners:
+          type: integer
+      required: [id, name, country, tier, entryFee, prizePool, totalClubs, activeOwners]
+
+    LeagueDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        country:
+          type: string
+        tier:
+          type: integer
+        entryFee:
+          type: integer
+        prizePool:
+          type: integer
+        season:
+          type: integer
+        currentWeek:
+          type: integer
+        totalWeeks:
+          type: integer
+        clubs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Club"
+      required: [id, name, country, tier, entryFee, prizePool, season, currentWeek, totalWeeks, clubs]
+
+    StandingRow:
+      type: object
+      properties:
+        position:
+          type: integer
         clubId:
           type: integer
-        managerName:
+        clubName:
           type: string
-      required: [clubId, managerName]
+        ownerName:
+          type: ["string", "null"]
+        coachName:
+          type: ["string", "null"]
+        played:
+          type: integer
+        won:
+          type: integer
+        drawn:
+          type: integer
+        lost:
+          type: integer
+        goalsFor:
+          type: integer
+        goalsAgainst:
+          type: integer
+        points:
+          type: integer
+      required: [position, clubId, clubName, played, won, drawn, lost, goalsFor, goalsAgainst, points]
 
+    # ── Clubs ───────────────────────────────────────────────────────────────
     Club:
       type: object
       properties:
@@ -781,45 +776,121 @@ components:
           type: integer
         name:
           type: string
-        city:
+        leagueId:
+          type: integer
+        leagueName:
           type: string
         country:
           type: string
+        city:
+          type: string
+        colors:
+          type: string
+        purchasePrice:
+          type: integer
+        currentValue:
+          type: integer
+        prestige:
+          type: integer
+        ownerId:
+          type: ["string", "null"]
+        ownerName:
+          type: ["string", "null"]
+        coachId:
+          type: ["string", "null"]
+        coachName:
+          type: ["string", "null"]
+        stadiumLevel:
+          type: integer
+        academyLevel:
+          type: integer
+        trainingLevel:
+          type: integer
+        transferBudget:
+          type: integer
+        weeklyWageBill:
+          type: integer
+      required: [id, name, leagueId, leagueName, country, city, colors, purchasePrice, currentValue, prestige, stadiumLevel, academyLevel, trainingLevel, transferBudget, weeklyWageBill]
+
+    ClubDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        leagueId:
+          type: integer
         leagueName:
           type: string
-        reputation:
+        country:
+          type: string
+        city:
+          type: string
+        colors:
+          type: string
+        purchasePrice:
           type: integer
-        budget:
+        currentValue:
+          type: integer
+        prestige:
+          type: integer
+        ownerId:
+          type: ["string", "null"]
+        ownerName:
+          type: ["string", "null"]
+        coachId:
+          type: ["string", "null"]
+        coachName:
+          type: ["string", "null"]
+        stadiumLevel:
+          type: integer
+        academyLevel:
+          type: integer
+        trainingLevel:
+          type: integer
+        transferBudget:
+          type: integer
+        weeklyWageBill:
           type: integer
         stadiumName:
           type: string
         stadiumCapacity:
           type: integer
-        colors:
-          type: string
         description:
           type: string
-      required: [id, name, city, country, leagueName, reputation, budget, stadiumName, stadiumCapacity, colors, description]
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+        coachSalary:
+          type: ["integer", "null"]
+        coachContractWeeks:
+          type: ["integer", "null"]
+      required: [id, name, leagueId, leagueName, country, city, colors, purchasePrice, currentValue, prestige, stadiumLevel, academyLevel, trainingLevel, transferBudget, weeklyWageBill, stadiumName, stadiumCapacity, description, players]
 
-    PlayerAttributes:
+    UpgradeInput:
       type: object
       properties:
-        pace:
-          type: integer
-        shooting:
-          type: integer
-        passing:
-          type: integer
-        dribbling:
-          type: integer
-        defending:
-          type: integer
-        physicality:
-          type: integer
-        goalkeeping:
-          type: integer
-      required: [pace, shooting, passing, dribbling, defending, physicality, goalkeeping]
+        upgradeType:
+          type: string
+          enum: [stadium, academy, training]
+      required: [upgradeType]
 
+    HireCoachInput:
+      type: object
+      properties:
+        coachUserId:
+          type: string
+        weeklySalary:
+          type: integer
+        contractWeeks:
+          type: integer
+        bonusPerWin:
+          type: integer
+      required: [coachUserId, weeklySalary, contractWeeks, bonusPerWin]
+
+    # ── Players ─────────────────────────────────────────────────────────────
     Player:
       type: object
       properties:
@@ -833,931 +904,335 @@ components:
           type: string
         position:
           type: string
-        preferredFoot:
-          type: string
-          enum: [left, right, both]
         overall:
           type: integer
         potential:
           type: integer
-        attributes:
-          $ref: "#/components/schemas/PlayerAttributes"
-        form:
+        pace:
           type: integer
-        fitness:
+        shooting:
           type: integer
-        morale:
-          type: string
+        passing:
+          type: integer
+        dribbling:
+          type: integer
+        defending:
+          type: integer
+        physicality:
+          type: integer
         value:
           type: integer
         weeklySalary:
           type: integer
-        contractEndsYear:
-          type: integer
-        seasonGoals:
-          type: integer
-        seasonAssists:
-          type: integer
-        seasonAppearances:
-          type: integer
+        contractEndsWeek:
+          type: ["integer", "null"]
         clubId:
-          type: integer
+          type: ["integer", "null"]
+        clubName:
+          type: ["string", "null"]
         isOnTransferList:
           type: boolean
-        isInjured:
+        isFreeAgent:
           type: boolean
-        injuryWeeksLeft:
-          type: integer
-        injuryType:
-          type: ["string", "null"]
-        role:
-          type: string
-          description: Player tactical role
-        trainingFocus:
-          type: ["string", "null"]
-        playerDescription:
-          type: string
-      required: [id, name, age, nationality, position, preferredFoot, overall, potential, attributes, form, fitness, morale, value, weeklySalary, contractEndsYear, seasonGoals, seasonAssists, seasonAppearances, clubId, isOnTransferList, isInjured, injuryWeeksLeft, role, playerDescription]
+      required: [id, name, age, nationality, position, overall, potential, pace, shooting, passing, dribbling, defending, physicality, value, weeklySalary, isOnTransferList, isFreeAgent]
 
-    TransferListToggleInput:
-      type: object
-      properties:
-        listed:
-          type: boolean
-      required: [listed]
-
-    Tactics:
-      type: object
-      properties:
-        formation:
-          type: string
-          enum: ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "5-3-2", "4-5-1", "3-4-3", "4-1-4-1", "5-4-1"]
-        mentality:
-          type: string
-          enum: [defensive, balanced, attacking, gegenpressing, counter, possession]
-        pressing:
-          type: integer
-        tempo:
-          type: integer
-        width:
-          type: integer
-        defensiveLine:
-          type: integer
-        captainId:
-          type: ["integer", "null"]
-        viceCaptainId:
-          type: ["integer", "null"]
-        penaltyTakerId:
-          type: ["integer", "null"]
-        startingXI:
-          type: array
-          items:
-            $ref: "#/components/schemas/TacticSlot"
-        instructions:
-          type: array
-          items:
-            $ref: "#/components/schemas/PlayerInstruction"
-      required: [formation, mentality, pressing, tempo, width, defensiveLine, startingXI, instructions]
-
-    TacticSlot:
-      type: object
-      properties:
-        slot:
-          type: integer
-        position:
-          type: string
-        playerId:
-          type: ["integer", "null"]
-        playerName:
-          type: ["string", "null"]
-        playerOverall:
-          type: ["integer", "null"]
-        role:
-          type: ["string", "null"]
-      required: [slot, position]
-
-    PlayerInstruction:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        role:
-          type: string
-        duty:
-          type: string
-          enum: [defend, support, attack]
-        specificInstruction:
-          type: ["string", "null"]
-      required: [playerId, role, duty]
-
-    TacticsInput:
-      type: object
-      properties:
-        formation:
-          type: string
-          enum: ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "5-3-2", "4-5-1", "3-4-3", "4-1-4-1", "5-4-1"]
-        mentality:
-          type: string
-          enum: [defensive, balanced, attacking, gegenpressing, counter, possession]
-        pressing:
-          type: integer
-        tempo:
-          type: integer
-        width:
-          type: integer
-        defensiveLine:
-          type: integer
-        captainId:
-          type: ["integer", "null"]
-        viceCaptainId:
-          type: ["integer", "null"]
-        penaltyTakerId:
-          type: ["integer", "null"]
-        startingXI:
-          type: array
-          items:
-            $ref: "#/components/schemas/TacticSlot"
-        instructions:
-          type: array
-          items:
-            $ref: "#/components/schemas/PlayerInstruction"
-      required: [formation, mentality, pressing, tempo, width, defensiveLine, startingXI, instructions]
-
-    Fixture:
+    # ── Contracts ───────────────────────────────────────────────────────────
+    Contract:
       type: object
       properties:
         id:
           type: integer
-        week:
-          type: integer
-        date:
-          type: string
-        homeClubId:
-          type: integer
-        homeClubName:
-          type: string
-        awayClubId:
-          type: integer
-        awayClubName:
-          type: string
-        status:
-          type: string
-          enum: [scheduled, completed, live]
-        homeScore:
-          type: ["integer", "null"]
-        awayScore:
-          type: ["integer", "null"]
-        isPlayerClubHome:
-          type: boolean
-        isPlayerClubAway:
-          type: boolean
-        competition:
-          type: string
-      required: [id, week, date, homeClubId, homeClubName, awayClubId, awayClubName, status, isPlayerClubHome, isPlayerClubAway, competition]
-
-    CommentaryLine:
-      type: object
-      properties:
-        minute:
-          type: integer
-        text:
-          type: string
         type:
           type: string
-          enum: [goal, card, substitution, chance, general, kickoff, halftime, fulltime]
-      required: [minute, text, type]
-
-    MatchEvent:
-      type: object
-      properties:
-        minute:
-          type: integer
-        type:
-          type: string
-          enum: [goal, own_goal, yellow_card, red_card, substitution, penalty]
-        clubId:
-          type: integer
+          enum: [player, coach]
         playerId:
           type: ["integer", "null"]
         playerName:
-          type: string
-        assistPlayerId:
-          type: ["integer", "null"]
-        assistPlayerName:
           type: ["string", "null"]
-      required: [minute, type, clubId, playerName]
-
-    MatchStats:
-      type: object
-      properties:
-        homePossession:
-          type: integer
-        awayPossession:
-          type: integer
-        homeShots:
-          type: integer
-        awayShots:
-          type: integer
-        homeShotsOnTarget:
-          type: integer
-        awayShotsOnTarget:
-          type: integer
-        homeCorners:
-          type: integer
-        awayCorners:
-          type: integer
-        homeFouls:
-          type: integer
-        awayFouls:
-          type: integer
-        homeYellowCards:
-          type: integer
-        awayYellowCards:
-          type: integer
-      required: [homePossession, awayPossession, homeShots, awayShots, homeShotsOnTarget, awayShotsOnTarget, homeCorners, awayCorners, homeFouls, awayFouls, homeYellowCards, awayYellowCards]
-
-    FixtureDetail:
-      type: object
-      properties:
-        id:
-          type: integer
-        week:
-          type: integer
-        date:
-          type: string
-        homeClubId:
-          type: integer
-        homeClubName:
-          type: string
-        awayClubId:
-          type: integer
-        awayClubName:
-          type: string
-        status:
-          type: string
-          enum: [scheduled, completed, live]
-        homeScore:
-          type: ["integer", "null"]
-        awayScore:
-          type: ["integer", "null"]
-        isPlayerClubHome:
-          type: boolean
-        isPlayerClubAway:
-          type: boolean
-        competition:
-          type: string
-        events:
-          type: array
-          items:
-            $ref: "#/components/schemas/MatchEvent"
-        stats:
-          $ref: "#/components/schemas/MatchStats"
-        commentary:
-          type: array
-          items:
-            $ref: "#/components/schemas/CommentaryLine"
-        playerRatings:
-          type: array
-          items:
-            $ref: "#/components/schemas/PlayerMatchRating"
-      required: [id, week, date, homeClubId, homeClubName, awayClubId, awayClubName, status, isPlayerClubHome, isPlayerClubAway, competition, events, commentary, playerRatings]
-
-    PlayerMatchRating:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        playerName:
-          type: string
-        position:
-          type: string
-        rating:
-          type: number
-        goals:
-          type: integer
-        assists:
-          type: integer
-        yellowCards:
-          type: integer
-      required: [playerId, playerName, position, rating, goals, assists, yellowCards]
-
-    LiveMatch:
-      type: object
-      properties:
-        fixtureId:
-          type: integer
-        status:
-          type: string
-          enum: [scheduled, completed]
-        currentMinute:
-          type: integer
-        homeScore:
-          type: integer
-        awayScore:
-          type: integer
-        homeClubName:
-          type: string
-        awayClubName:
-          type: string
-        commentary:
-          type: array
-          items:
-            $ref: "#/components/schemas/CommentaryLine"
-        events:
-          type: array
-          items:
-            $ref: "#/components/schemas/MatchEvent"
-      required: [fixtureId, status, currentMinute, homeScore, awayScore, homeClubName, awayClubName, commentary, events]
-
-    Standing:
-      type: object
-      properties:
-        position:
-          type: integer
+        coachId:
+          type: ["string", "null"]
+        coachName:
+          type: ["string", "null"]
         clubId:
           type: integer
         clubName:
           type: string
-        played:
+        weeklySalary:
           type: integer
-        won:
+        startWeek:
           type: integer
-        drawn:
+        endWeek:
           type: integer
-        lost:
+        buyoutClause:
           type: integer
-        goalsFor:
-          type: integer
-        goalsAgainst:
-          type: integer
-        goalDifference:
-          type: integer
-        points:
-          type: integer
-        isPlayerClub:
-          type: boolean
-        form:
-          type: array
-          items:
-            type: string
-            enum: [W, D, L]
-      required: [position, clubId, clubName, played, won, drawn, lost, goalsFor, goalsAgainst, goalDifference, points, isPlayerClub, form]
-
-    LeagueTable:
-      type: object
-      properties:
-        leagueName:
+        status:
           type: string
-        season:
-          type: integer
-        currentWeek:
-          type: integer
-        standings:
-          type: array
-          items:
-            $ref: "#/components/schemas/Standing"
-      required: [leagueName, season, currentWeek, standings]
+          enum: [active, expired, terminated]
+      required: [id, type, clubId, clubName, weeklySalary, startWeek, endWeek, buyoutClause, status]
 
-    TransferListing:
+    PlayerContractInput:
       type: object
       properties:
         playerId:
           type: integer
-        playerName:
-          type: string
-        age:
+        weeklySalary:
           type: integer
-        nationality:
+        contractWeeks:
+          type: integer
+      required: [playerId, weeklySalary, contractWeeks]
+
+    CoachOffer:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerName:
+          type: string
+        clubId:
+          type: integer
+        clubName:
+          type: string
+        leagueName:
+          type: string
+        weeklySalary:
+          type: integer
+        contractWeeks:
+          type: integer
+        bonusPerWin:
+          type: integer
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        createdAt:
+          type: string
+      required: [id, ownerName, clubId, clubName, leagueName, weeklySalary, contractWeeks, bonusPerWin, status, createdAt]
+
+    OfferResponseInput:
+      type: object
+      properties:
+        accept:
+          type: boolean
+      required: [accept]
+
+    # ── Transfers ───────────────────────────────────────────────────────────
+    TransferListing:
+      type: object
+      properties:
+        id:
+          type: integer
+        playerId:
+          type: integer
+        playerName:
           type: string
         position:
           type: string
         overall:
           type: integer
-        potential:
+        age:
           type: integer
-        clubId:
-          type: integer
-        clubName:
-          type: string
-        askingPrice:
-          type: integer
-        weeklySalary:
-          type: integer
-        contractEndsYear:
-          type: integer
-        attributes:
-          $ref: "#/components/schemas/PlayerAttributes"
-      required: [playerId, playerName, age, nationality, position, overall, potential, clubId, clubName, askingPrice, weeklySalary, contractEndsYear, attributes]
-
-    TransferOfferInput:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        offerAmount:
-          type: integer
-        offeredSalary:
-          type: integer
-      required: [playerId, offerAmount, offeredSalary]
-
-    TransferResult:
-      type: object
-      properties:
-        success:
-          type: boolean
-        message:
-          type: string
-        player:
-          $ref: "#/components/schemas/Player"
-      required: [success, message]
-
-    Transfer:
-      type: object
-      properties:
-        id:
-          type: integer
-        playerId:
-          type: integer
-        playerName:
-          type: string
         fromClubId:
           type: integer
         fromClubName:
           type: string
-        toClubId:
+        askingPrice:
           type: integer
+        listedAt:
+          type: string
+      required: [id, playerId, playerName, position, overall, age, fromClubId, fromClubName, askingPrice, listedAt]
+
+    BidInput:
+      type: object
+      properties:
+        listingId:
+          type: integer
+        bidAmount:
+          type: integer
+      required: [listingId, bidAmount]
+
+    TransferBid:
+      type: object
+      properties:
+        id:
+          type: integer
+        listingId:
+          type: integer
+        playerName:
+          type: string
+        bidAmount:
+          type: integer
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        taxAmount:
+          type: integer
+      required: [id, listingId, playerName, bidAmount, status, taxAmount]
+
+    ListPlayerInput:
+      type: object
+      properties:
+        playerId:
+          type: integer
+        askingPrice:
+          type: integer
+      required: [playerId, askingPrice]
+
+    TransferRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        playerName:
+          type: string
+        fromClubName:
+          type: string
         toClubName:
           type: string
         fee:
           type: integer
-        date:
+        taxPaid:
+          type: integer
+        completedAt:
           type: string
-        type:
-          type: string
-          enum: [purchase, sale]
-      required: [id, playerId, playerName, fromClubId, fromClubName, toClubId, toClubName, fee, date, type]
+      required: [id, playerName, fromClubName, toClubName, fee, taxPaid, completedAt]
 
-    InboxMessage:
+    # ── Economy ─────────────────────────────────────────────────────────────
+    EconomySummary:
       type: object
       properties:
-        id:
+        totalMoneyInCirculation:
           type: integer
-        date:
-          type: string
-        subject:
-          type: string
-        body:
-          type: string
-        type:
-          type: string
-          enum: [match_result, transfer, injury, board, media, contract, general, training, press]
-        isRead:
-          type: boolean
-        priority:
-          type: string
-          enum: [low, normal, high, urgent]
-      required: [id, date, subject, body, type, isRead, priority]
+        taxPoolBalance:
+          type: integer
+        totalTransfersThisSeason:
+          type: integer
+        totalTransferVolume:
+          type: integer
+        activeOwners:
+          type: integer
+        activeCoaches:
+          type: integer
+        totalClubs:
+          type: integer
+        taxRate:
+          type: number
+      required: [totalMoneyInCirculation, taxPoolBalance, totalTransfersThisSeason, totalTransferVolume, activeOwners, activeCoaches, totalClubs, taxRate]
 
-    Finances:
+    MyFinances:
       type: object
       properties:
         balance:
           type: integer
-        transferBudget:
+        weeklyIncome:
           type: integer
-        wageBudget:
+        weeklyExpenses:
           type: integer
-        currentWeeklyWages:
+        totalEarned:
           type: integer
-        seasonRevenue:
+        totalSpent:
           type: integer
-        seasonExpenditure:
-          type: integer
-        matchdayRevenue:
-          type: integer
-        sponsorshipRevenue:
-          type: integer
-        transferIncome:
-          type: integer
-        transferSpend:
-          type: integer
-        prizeMoneyEstimate:
-          type: integer
-      required: [balance, transferBudget, wageBudget, currentWeeklyWages, seasonRevenue, seasonExpenditure, matchdayRevenue, sponsorshipRevenue, transferIncome, transferSpend, prizeMoneyEstimate]
-
-    TrainingSession:
-      type: object
-      properties:
-        day:
-          type: string
-          enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
-        type:
-          type: string
-          enum: [rest, fitness, tactics, attacking, defending, set_pieces, match_prep, youth]
-        intensity:
-          type: string
-          enum: [light, normal, hard]
-      required: [day, type, intensity]
-
-    TrainingSchedule:
-      type: object
-      properties:
-        sessions:
-          type: array
-          items:
-            $ref: "#/components/schemas/TrainingSession"
-        teamFocus:
-          type: string
-          enum: [balanced, fitness, tactical, attacking, defending, set_pieces]
-        coachingBonus:
-          type: number
-          description: Multiplier from coaching staff quality
-      required: [sessions, teamFocus, coachingBonus]
-
-    TrainingScheduleInput:
-      type: object
-      properties:
-        sessions:
-          type: array
-          items:
-            $ref: "#/components/schemas/TrainingSession"
-        teamFocus:
-          type: string
-          enum: [balanced, fitness, tactical, attacking, defending, set_pieces]
-      required: [sessions, teamFocus]
-
-    IndividualTraining:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        playerName:
-          type: string
-        position:
-          type: string
-        overall:
-          type: integer
-        focus:
-          type: ["string", "null"]
-          enum: [pace, shooting, passing, dribbling, defending, physicality, goalkeeping, null]
-        progress:
-          type: integer
-          description: 0-100 progress towards next attribute point
-      required: [playerId, playerName, position, overall, progress]
-
-    IndividualTrainingItem:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        focus:
-          type: ["string", "null"]
-      required: [playerId]
-
-    IndividualTrainingInput:
-      type: object
-      properties:
-        assignments:
-          type: array
-          items:
-            $ref: "#/components/schemas/IndividualTrainingItem"
-      required: [assignments]
-
-    Injury:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        playerName:
-          type: string
-        position:
-          type: string
-        injuryType:
-          type: string
-        weeksRemaining:
-          type: integer
-        returnDate:
-          type: string
-        severity:
-          type: string
-          enum: [minor, moderate, serious, severe]
-      required: [playerId, playerName, position, injuryType, weeksRemaining, returnDate, severity]
-
-    ShortlistEntry:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        playerName:
-          type: string
-        age:
-          type: integer
-        nationality:
-          type: string
-        position:
-          type: string
-        overall:
-          type: integer
-        potential:
-          type: integer
-        clubId:
-          type: integer
-        clubName:
-          type: string
-        value:
-          type: integer
-        weeklySalary:
-          type: integer
-        isOnTransferList:
-          type: boolean
-        notes:
-          type: ["string", "null"]
-        dateAdded:
-          type: string
-      required: [playerId, playerName, age, nationality, position, overall, potential, clubId, clubName, value, weeklySalary, isOnTransferList, dateAdded]
-
-    ShortlistInput:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        notes:
-          type: ["string", "null"]
-      required: [playerId]
-
-    ScoutSearchInput:
-      type: object
-      properties:
-        position:
-          type: ["string", "null"]
-        minOverall:
-          type: integer
-        maxAge:
-          type: integer
-        maxValue:
-          type: integer
-        nationality:
-          type: ["string", "null"]
-      required: [minOverall, maxAge, maxValue]
-
-    ScoutReport:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        playerName:
-          type: string
-        age:
-          type: integer
-        nationality:
-          type: string
-        position:
-          type: string
-        overall:
-          type: integer
-        potential:
-          type: integer
-        clubName:
-          type: string
-        value:
-          type: integer
-        weeklySalary:
-          type: integer
-        isOnTransferList:
-          type: boolean
-        scoutRating:
-          type: integer
-          description: Scout's recommendation 1-5
-        scoutComment:
-          type: string
-        attributes:
-          $ref: "#/components/schemas/PlayerAttributes"
-      required: [playerId, playerName, age, nationality, position, overall, potential, clubName, value, weeklySalary, isOnTransferList, scoutRating, scoutComment, attributes]
-
-    ContractSummary:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        playerName:
-          type: string
-        position:
-          type: string
-        overall:
-          type: integer
-        age:
-          type: integer
-        currentSalary:
-          type: integer
-        contractEndsYear:
-          type: integer
-        morale:
-          type: string
-        wantsToLeave:
-          type: boolean
-      required: [playerId, playerName, position, overall, age, currentSalary, contractEndsYear, morale, wantsToLeave]
-
-    ContractOfferInput:
-      type: object
-      properties:
-        weeklySalary:
-          type: integer
-        yearsLength:
-          type: integer
-      required: [weeklySalary, yearsLength]
-
-    ContractResult:
-      type: object
-      properties:
-        success:
-          type: boolean
-        message:
-          type: string
-        newContractEndsYear:
+        clubValue:
           type: ["integer", "null"]
-        newWeeklySalary:
-          type: ["integer", "null"]
-      required: [success, message]
+        prizeMoneyEarned:
+          type: integer
+      required: [balance, weeklyIncome, weeklyExpenses, totalEarned, totalSpent, prizeMoneyEarned]
 
-    SetPieceRoutine:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: [corner_attack, corner_defend, freekick_attack, freekick_defend, throwIn]
-        routine:
-          type: string
-        takerId:
-          type: ["integer", "null"]
-        takerName:
-          type: ["string", "null"]
-        targetArea:
-          type: string
-          enum: [near_post, far_post, penalty_spot, edge_of_box, short]
-      required: [type, routine, targetArea]
-
-    SetPieces:
-      type: object
-      properties:
-        routines:
-          type: array
-          items:
-            $ref: "#/components/schemas/SetPieceRoutine"
-      required: [routines]
-
-    SetPiecesInput:
-      type: object
-      properties:
-        routines:
-          type: array
-          items:
-            $ref: "#/components/schemas/SetPieceRoutine"
-      required: [routines]
-
-    StaffMember:
+    Transaction:
       type: object
       properties:
         id:
           type: integer
-        name:
+        type:
           type: string
+          enum: [transfer_fee, salary, prize_money, club_purchase, upgrade, tax, bonus]
+        amount:
+          type: integer
+        description:
+          type: string
+        createdAt:
+          type: string
+      required: [id, type, amount, description, createdAt]
+
+    # ── Dashboard ───────────────────────────────────────────────────────────
+    Dashboard:
+      type: object
+      properties:
         role:
           type: string
-          enum: [assistant_manager, coach, fitness_coach, goalkeeper_coach, scout, physio, analyst]
-        nationality:
+          enum: [owner, coach]
+        displayName:
           type: string
-        rating:
+        balance:
           type: integer
-        speciality:
-          type: string
-        weeklySalary:
+        reputation:
           type: integer
-        isHired:
-          type: boolean
         clubId:
           type: ["integer", "null"]
-      required: [id, name, role, nationality, rating, speciality, weeklySalary, isHired]
-
-    HireStaffInput:
-      type: object
-      properties:
-        staffId:
+        clubName:
+          type: ["string", "null"]
+        leagueName:
+          type: ["string", "null"]
+        leaguePosition:
+          type: ["integer", "null"]
+        points:
+          type: ["integer", "null"]
+        clubValue:
+          type: ["integer", "null"]
+        transferBudget:
+          type: ["integer", "null"]
+        squadSize:
+          type: ["integer", "null"]
+        weeklyWageBill:
+          type: ["integer", "null"]
+        pendingOffers:
           type: integer
-      required: [staffId]
+        hasClub:
+          type: boolean
+      required: [role, displayName, balance, reputation, pendingOffers, hasClub]
 
-    PressQuestion:
+    ActivityItem:
       type: object
       properties:
         id:
           type: integer
-        question:
-          type: string
-        context:
-          type: string
-        options:
-          type: array
-          items:
-            $ref: "#/components/schemas/PressOption"
-      required: [id, question, context, options]
-
-    PressOption:
-      type: object
-      properties:
-        id:
-          type: string
-        text:
-          type: string
-        tone:
-          type: string
-          enum: [positive, neutral, dismissive, aggressive, humble, confident]
-      required: [id, text, tone]
-
-    PressConference:
-      type: object
-      properties:
         type:
           type: string
-          enum: [pre_match, post_match, general]
-        questions:
+          enum: [transfer, club_sale, coach_hired, coach_fired, upgrade, match_result]
+        description:
+          type: string
+        involvedClub:
+          type: ["string", "null"]
+        amount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required: [id, type, description, createdAt]
+
+    Leaderboard:
+      type: object
+      properties:
+        topOwners:
           type: array
           items:
-            $ref: "#/components/schemas/PressQuestion"
-        opponentName:
-          type: ["string", "null"]
-      required: [type, questions]
+            $ref: "#/components/schemas/LeaderboardEntry"
+        topCoaches:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardEntry"
+      required: [topOwners, topCoaches]
 
-    PressAnswerInput:
+    LeaderboardEntry:
       type: object
       properties:
-        questionId:
+        rank:
           type: integer
-        optionId:
+        userId:
           type: string
-      required: [questionId, optionId]
-
-    PressAnswerResult:
-      type: object
-      properties:
-        moraleEffect:
-          type: string
-          enum: [positive, neutral, negative]
-        message:
-          type: string
-        moraleChange:
-          type: integer
-      required: [moraleEffect, message, moraleChange]
-
-    TeamTalkInput:
-      type: object
-      properties:
-        tone:
-          type: string
-          enum: [encourage, praise, demand, calm, motivate, warning]
-        timing:
-          type: string
-          enum: [pre_match, half_time, post_match_win, post_match_draw, post_match_loss]
-      required: [tone, timing]
-
-    TeamTalkResult:
-      type: object
-      properties:
-        moraleEffect:
-          type: string
-          enum: [positive, neutral, negative]
-        message:
-          type: string
-        affectedPlayers:
-          type: integer
-      required: [moraleEffect, message, affectedPlayers]
-
-    PlayerSeasonStat:
-      type: object
-      properties:
-        playerId:
-          type: integer
-        playerName:
+        displayName:
           type: string
         clubName:
+          type: ["string", "null"]
+        score:
+          type: integer
+        scoreLabel:
           type: string
-        position:
-          type: string
-        goals:
-          type: integer
-        assists:
-          type: integer
-        appearances:
-          type: integer
-      required: [playerId, playerName, clubName, position, goals, assists, appearances]
-
-    SeasonStats:
-      type: object
-      properties:
-        topScorers:
-          type: array
-          items:
-            $ref: "#/components/schemas/PlayerSeasonStat"
-        topAssisters:
-          type: array
-          items:
-            $ref: "#/components/schemas/PlayerSeasonStat"
-      required: [topScorers, topAssisters]
+      required: [rank, userId, displayName, score, scoreLabel]
