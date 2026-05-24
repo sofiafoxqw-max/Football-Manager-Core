@@ -49,6 +49,12 @@ const mentalityColors: Record<string, string> = {
   "long-ball": "#84cc16", "park-the-bus": "#6b7280",
 };
 
+function numToOption(val: unknown, options: string[], fallback: string): string {
+  if (typeof val === "string" && options.includes(val)) return val;
+  if (typeof val === "number" && val >= 0 && val < options.length) return options[val];
+  return fallback;
+}
+
 export default function Tactics() {
   const { data: tactics, isLoading: tacticsLoading } = useGetTactics();
   const { data: squad } = useGetSquad();
@@ -68,17 +74,30 @@ export default function Tactics() {
     if (tactics) {
       setFormation(tactics.formation ?? "4-3-3");
       setMentality(tactics.mentality ?? "balanced");
-      setPressing((tactics as any).pressing ?? "medium");
-      setTempo((tactics as any).tempo ?? "medium");
-      setDefensiveLine((tactics as any).defensiveLine ?? "normal");
+      setPressing(numToOption((tactics as any).pressing, PRESS_OPTIONS, "medium"));
+      setTempo(numToOption((tactics as any).tempo, TEMPO_OPTIONS, "medium"));
+      const dl = (tactics as any).defensiveLine ?? (tactics as any).width;
+      setDefensiveLine(numToOption(dl, LINE_OPTIONS, "normal"));
       setCaptainId((tactics as any).captainId ?? null);
     }
   }, [tactics]);
 
   const handleSave = async () => {
     setSaving(true);
+    const pressingIdx = PRESS_OPTIONS.indexOf(pressing);
+    const tempoIdx = TEMPO_OPTIONS.indexOf(tempo);
+    const dlIdx = LINE_OPTIONS.indexOf(defensiveLine);
     await updateTactics.mutateAsync({
-      data: { formation: formation as any, mentality: mentality as any, pressing: pressing as any, tempo: tempo as any, width: 50, defensiveLine: defensiveLine as any, captainId: captainId ?? undefined, startingXI: [] }
+      data: {
+        formation: formation as any,
+        mentality: mentality as any,
+        pressing: pressingIdx >= 0 ? pressingIdx : 1,
+        tempo: tempoIdx >= 0 ? tempoIdx : 1,
+        width: dlIdx >= 0 ? dlIdx : 1,
+        defensiveLine: dlIdx >= 0 ? dlIdx : 1,
+        captainId: captainId ?? undefined,
+        startingXI: [],
+      }
     });
     qc.invalidateQueries({ queryKey: getGetTacticsQueryKey() });
     setSaving(false);
