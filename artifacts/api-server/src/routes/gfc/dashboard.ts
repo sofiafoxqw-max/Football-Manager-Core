@@ -16,7 +16,7 @@ const router = Router();
 
 router.get("/", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role === "unregistered") return res.status(403).json({ error: "Not registered" });
 
     const club = await getGfcClubByUser(user);

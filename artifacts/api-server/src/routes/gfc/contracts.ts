@@ -16,7 +16,7 @@ const router = Router();
 
 router.get("/", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user) return res.status(404).json({ error: "User not registered" });
     const club = await getGfcClubByUser(user);
     if (!club) return res.json([]);
@@ -49,7 +49,7 @@ router.get("/", requireAuth, async (req: any, res) => {
 
 router.get("/coach-offers", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "coach") return res.status(403).json({ error: "Coaches only" });
     const offers = await db.select().from(gfcCoachOffersTable)
       .where(eq(gfcCoachOffersTable.coachUserId, user.id));
@@ -80,7 +80,7 @@ router.get("/coach-offers", requireAuth, async (req: any, res) => {
 
 router.post("/coach-offers/:id/respond", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "coach") return res.status(403).json({ error: "Coaches only" });
     const offerId = parseInt(req.params.id);
     const { accept } = req.body;
@@ -113,7 +113,7 @@ router.post("/coach-offers/:id/respond", requireAuth, async (req: any, res) => {
 
 router.post("/player", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "coach") return res.status(403).json({ error: "Coaches only" });
     const club = await getGfcClubByUser(user);
     if (!club) return res.status(400).json({ error: "Not managing a club" });
@@ -161,7 +161,7 @@ router.post("/player", requireAuth, async (req: any, res) => {
 
 router.post("/:id/terminate", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user) return res.status(401).json({ error: "Not registered" });
     const contractId = parseInt(req.params.id);
     const [contract] = await db.select().from(gfcContractsTable).where(eq(gfcContractsTable.id, contractId));

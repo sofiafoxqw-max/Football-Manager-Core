@@ -1,5 +1,5 @@
 import { useListCoachOffers, getListCoachOffersQueryKey, useGetMe, getGetMeQueryKey, useRespondToCoachOffer, useHireCoach, getGetMyClubQueryKey } from "@workspace/api-client-react";
-import { useAuth } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

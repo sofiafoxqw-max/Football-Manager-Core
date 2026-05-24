@@ -9,7 +9,7 @@ import type { UserProfileRole } from './userProfileRole';
 
 export interface UserProfile {
   id: string;
-  clerkId: string;
+  email: string;
   displayName: string;
   role: UserProfileRole;
   /** GFC coins */

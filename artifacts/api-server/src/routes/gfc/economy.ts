@@ -37,7 +37,7 @@ router.get("/summary", async (_req, res) => {
 
 router.get("/my-finances", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user) return res.status(404).json({ error: "Not registered" });
     const club = await getGfcClubByUser(user);
     const txs = await db.select().from(gfcTransactionsTable).where(eq(gfcTransactionsTable.userId, user.id));
@@ -59,7 +59,7 @@ router.get("/my-finances", requireAuth, async (req: any, res) => {
 
 router.get("/transactions", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user) return res.status(404).json({ error: "Not registered" });
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
     const txs = await db.select().from(gfcTransactionsTable)

@@ -29,7 +29,7 @@ export const UserProfileRole = {
 
 export interface UserProfile {
   id: string;
-  clerkId: string;
+  email: string;
   displayName: string;
   role: UserProfileRole;
   /** GFC coins */
@@ -40,6 +40,21 @@ export interface UserProfile {
   /** @nullable */
   clubName?: string | null;
   createdAt: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: UserProfile;
+}
+
+export interface SignupInput {
+  email: string;
+  password: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
 }
 
 export type RegisterInputRole = typeof RegisterInputRole[keyof typeof RegisterInputRole];

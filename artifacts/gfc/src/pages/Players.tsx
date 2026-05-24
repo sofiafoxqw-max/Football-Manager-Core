@@ -1,5 +1,5 @@
 import { useListPlayers, getListPlayersQueryKey, useGetMe, getGetMeQueryKey, useListPlayerForTransfer, getGetTransferMarketQueryKey } from "@workspace/api-client-react";
-import { useAuth } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent } from "@/components/ui/card";

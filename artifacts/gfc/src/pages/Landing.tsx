@@ -1,6 +1,6 @@
 import { useGetEconomySummary, useGetLeaderboard, getGetEconomySummaryQueryKey, getGetLeaderboardQueryKey } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 import { ArrowRight, Activity, Trophy, Users, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

@@ -106,7 +106,7 @@ router.get("/", async (req, res) => {
 
 router.get("/my", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user) return res.status(404).json({ error: "Not registered" });
     const club = await getGfcClubByUser(user);
     if (!club) return res.status(404).json({ error: "No club found" });
@@ -131,7 +131,7 @@ router.get("/:id", async (req, res) => {
 
 router.post("/:id/buy", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "owner") return res.status(403).json({ error: "Owners only" });
     const clubId = parseInt(req.params.id);
     const [club] = await db.select().from(gfcClubsTable).where(eq(gfcClubsTable.id, clubId));
@@ -169,7 +169,7 @@ router.post("/:id/buy", requireAuth, async (req: any, res) => {
 
 router.post("/:id/hire-coach", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "owner") return res.status(403).json({ error: "Owners only" });
     const clubId = parseInt(req.params.id);
     const [club] = await db.select().from(gfcClubsTable).where(eq(gfcClubsTable.id, clubId));
@@ -194,7 +194,7 @@ router.post("/:id/hire-coach", requireAuth, async (req: any, res) => {
 
 router.post("/:id/fire-coach", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "owner") return res.status(403).json({ error: "Owners only" });
     const clubId = parseInt(req.params.id);
     const [club] = await db.select().from(gfcClubsTable).where(eq(gfcClubsTable.id, clubId));
@@ -217,7 +217,7 @@ router.post("/:id/fire-coach", requireAuth, async (req: any, res) => {
 
 router.post("/:id/upgrade", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "owner") return res.status(403).json({ error: "Owners only" });
     const clubId = parseInt(req.params.id);
     const [club] = await db.select().from(gfcClubsTable).where(eq(gfcClubsTable.id, clubId));

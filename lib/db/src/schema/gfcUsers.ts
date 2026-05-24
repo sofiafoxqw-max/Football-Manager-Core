@@ -2,8 +2,9 @@ import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
 
 export const gfcUsersTable = pgTable("gfc_users", {
   id: text("id").primaryKey(),
-  clerkId: text("clerk_id").notNull().unique(),
-  displayName: text("display_name").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  displayName: text("display_name").notNull().default(""),
   role: text("role").notNull().default("unregistered"),
   balance: integer("balance").notNull().default(10000000),
   reputation: integer("reputation").notNull().default(50),

@@ -1,9 +1,9 @@
 import { db } from "@workspace/db";
 import { gfcUsersTable, gfcClubsTable } from "@workspace/db";
-import { eq, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
-export async function getGfcUser(clerkId: string) {
-  const [user] = await db.select().from(gfcUsersTable).where(eq(gfcUsersTable.clerkId, clerkId));
+export async function getGfcUser(userId: string) {
+  const [user] = await db.select().from(gfcUsersTable).where(eq(gfcUsersTable.id, userId));
   return user ?? null;
 }
 

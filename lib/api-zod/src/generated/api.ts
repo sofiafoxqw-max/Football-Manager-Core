@@ -14,11 +14,44 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Create account with email + password
+ */
+export const SignupBody = zod.object({
+  "email": zod.string(),
+  "password": zod.string()
+})
+
+
+/**
+ * @summary Login with email + password
+ */
+export const LoginBody = zod.object({
+  "email": zod.string(),
+  "password": zod.string()
+})
+
+export const LoginResponse = zod.object({
+  "token": zod.string(),
+  "user": zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "displayName": zod.string(),
+  "role": zod.enum(['owner', 'coach', 'unregistered']),
+  "balance": zod.number().describe('GFC coins'),
+  "reputation": zod.number(),
+  "clubId": zod.number().nullish(),
+  "clubName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+})
+
+
+/**
  * @summary Get current user profile
  */
 export const GetMeResponse = zod.object({
   "id": zod.string(),
-  "clerkId": zod.string(),
+  "email": zod.string(),
   "displayName": zod.string(),
   "role": zod.enum(['owner', 'coach', 'unregistered']),
   "balance": zod.number().describe('GFC coins'),

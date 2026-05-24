@@ -55,7 +55,7 @@ router.get("/market", async (req, res) => {
 
 router.post("/bid", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "coach") return res.status(403).json({ error: "Coaches only" });
     const club = await getGfcClubByUser(user);
     if (!club) return res.status(400).json({ error: "Not managing a club" });
@@ -110,7 +110,7 @@ router.post("/bid", requireAuth, async (req: any, res) => {
 
 router.post("/list-player", requireAuth, async (req: any, res) => {
   try {
-    const user = await getGfcUser(req.clerkUserId);
+    const user = await getGfcUser(req.gfcUserId);
     if (!user || user.role !== "coach") return res.status(403).json({ error: "Coaches only" });
     const club = await getGfcClubByUser(user);
     if (!club) return res.status(400).json({ error: "Not managing a club" });
