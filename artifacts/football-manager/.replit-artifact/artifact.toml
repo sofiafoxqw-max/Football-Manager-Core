@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Football Manager"
+version = "1.0.0"
+id = "artifacts/football-manager"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24604
+
+[services.development]
+run = "pnpm --filter @workspace/football-manager run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/football-manager", "run", "build" ]
+publicDir = "artifacts/football-manager/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24604"
+BASE_PATH = "/"

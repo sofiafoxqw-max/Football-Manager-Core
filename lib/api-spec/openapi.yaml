@@ -1,22 +1,36 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Football Manager game API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: game
+    description: Game state management
+  - name: squad
+    description: Squad and player management
+  - name: tactics
+    description: Team tactics
+  - name: fixtures
+    description: Fixtures and match simulation
+  - name: league
+    description: League standings
+  - name: transfers
+    description: Transfer market
+  - name: inbox
+    description: Manager inbox
+  - name: finances
+    description: Club finances
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +38,333 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /game/state:
+    get:
+      operationId: getGameState
+      tags: [game]
+      summary: Get current game state
+      responses:
+        "200":
+          description: Current game state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+        "404":
+          description: No game started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /game/setup:
+    post:
+      operationId: setupGame
+      tags: [game]
+      summary: Start a new game by choosing a club
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameSetupInput"
+      responses:
+        "201":
+          description: Game created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+
+  /game/advance:
+    post:
+      operationId: advanceGame
+      tags: [game]
+      summary: Advance game to next match week
+      responses:
+        "200":
+          description: Advanced to next week
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+
+  /game/clubs:
+    get:
+      operationId: listClubs
+      tags: [game]
+      summary: List all available clubs to manage
+      responses:
+        "200":
+          description: List of clubs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Club"
+
+  /squad:
+    get:
+      operationId: getSquad
+      tags: [squad]
+      summary: Get current squad
+      responses:
+        "200":
+          description: Squad players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Player"
+
+  /players/{id}:
+    get:
+      operationId: getPlayer
+      tags: [squad]
+      summary: Get player details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Player details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tactics:
+    get:
+      operationId: getTactics
+      tags: [tactics]
+      summary: Get current team tactics
+      responses:
+        "200":
+          description: Current tactics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tactics"
+    put:
+      operationId: updateTactics
+      tags: [tactics]
+      summary: Update team tactics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TacticsInput"
+      responses:
+        "200":
+          description: Updated tactics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tactics"
+
+  /fixtures:
+    get:
+      operationId: listFixtures
+      tags: [fixtures]
+      summary: List all fixtures for the season
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [scheduled, completed]
+      responses:
+        "200":
+          description: List of fixtures
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Fixture"
+
+  /fixtures/{id}:
+    get:
+      operationId: getFixture
+      tags: [fixtures]
+      summary: Get fixture details with match events
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Fixture details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FixtureDetail"
+
+  /fixtures/{id}/simulate:
+    post:
+      operationId: simulateMatch
+      tags: [fixtures]
+      summary: Simulate a match
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Match result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FixtureDetail"
+
+  /league:
+    get:
+      operationId: getLeagueStandings
+      tags: [league]
+      summary: Get current league standings
+      responses:
+        "200":
+          description: League standings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeagueTable"
+
+  /transfers/market:
+    get:
+      operationId: getTransferMarket
+      tags: [transfers]
+      summary: Get available players on transfer market
+      parameters:
+        - name: position
+          in: query
+          schema:
+            type: string
+        - name: maxValue
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Available players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TransferListing"
+
+  /transfers/offer:
+    post:
+      operationId: makeTransferOffer
+      tags: [transfers]
+      summary: Make a transfer offer for a player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferOfferInput"
+      responses:
+        "200":
+          description: Offer result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferResult"
+
+  /transfers:
+    get:
+      operationId: listTransfers
+      tags: [transfers]
+      summary: List completed transfers for my club
+      responses:
+        "200":
+          description: Transfer history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transfer"
+
+  /inbox:
+    get:
+      operationId: listInboxMessages
+      tags: [inbox]
+      summary: Get manager inbox messages
+      responses:
+        "200":
+          description: Inbox messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InboxMessage"
+
+  /inbox/{id}/read:
+    post:
+      operationId: markMessageRead
+      tags: [inbox]
+      summary: Mark a message as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Message marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxMessage"
+
+  /finances:
+    get:
+      operationId: getFinances
+      tags: [finances]
+      summary: Get club financial overview
+      responses:
+        "200":
+          description: Financial data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Finances"
+
+  /stats/season:
+    get:
+      operationId: getSeasonStats
+      tags: [league]
+      summary: Get top scorers and assisters this season
+      responses:
+        "200":
+          description: Season stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeasonStats"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +372,513 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    GameState:
+      type: object
+      properties:
+        started:
+          type: boolean
+        clubId:
+          type: ["integer", "null"]
+        clubName:
+          type: ["string", "null"]
+        leagueName:
+          type: ["string", "null"]
+        currentDate:
+          type: ["string", "null"]
+        currentWeek:
+          type: ["integer", "null"]
+        totalWeeks:
+          type: ["integer", "null"]
+        season:
+          type: ["integer", "null"]
+        leaguePosition:
+          type: ["integer", "null"]
+        points:
+          type: ["integer", "null"]
+        nextFixtureId:
+          type: ["integer", "null"]
+        unreadMessages:
+          type: integer
+      required: [started, unreadMessages]
+
+    GameSetupInput:
+      type: object
+      properties:
+        clubId:
+          type: integer
+        managerName:
+          type: string
+      required: [clubId, managerName]
+
+    Club:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        leagueName:
+          type: string
+        reputation:
+          type: integer
+          description: 1-5 star reputation
+        budget:
+          type: integer
+        stadiumName:
+          type: string
+        stadiumCapacity:
+          type: integer
+        colors:
+          type: string
+          description: Primary color hex
+      required: [id, name, city, country, leagueName, reputation, budget, stadiumName, stadiumCapacity, colors]
+
+    PlayerAttributes:
+      type: object
+      properties:
+        pace:
+          type: integer
+        shooting:
+          type: integer
+        passing:
+          type: integer
+        dribbling:
+          type: integer
+        defending:
+          type: integer
+        physicality:
+          type: integer
+        goalkeeping:
+          type: integer
+      required: [pace, shooting, passing, dribbling, defending, physicality, goalkeeping]
+
+    Player:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        age:
+          type: integer
+        nationality:
+          type: string
+        position:
+          type: string
+          enum: [GK, RB, CB, LB, CDM, CM, CAM, RM, LM, RW, LW, ST, CF]
+        overall:
+          type: integer
+          description: Overall rating 1-99
+        potential:
+          type: integer
+        attributes:
+          $ref: "#/components/schemas/PlayerAttributes"
+        form:
+          type: integer
+          description: Current form 1-10
+        fitness:
+          type: integer
+          description: Fitness 0-100
+        morale:
+          type: string
+          enum: [excellent, good, okay, poor, unhappy]
+        value:
+          type: integer
+          description: Market value in thousands
+        weeklySalary:
+          type: integer
+          description: Weekly salary in thousands
+        contractEndsYear:
+          type: integer
+        seasonGoals:
+          type: integer
+        seasonAssists:
+          type: integer
+        clubId:
+          type: integer
+        isOnTransferList:
+          type: boolean
+      required: [id, name, age, nationality, position, overall, potential, attributes, form, fitness, morale, value, weeklySalary, contractEndsYear, seasonGoals, seasonAssists, clubId, isOnTransferList]
+
+    Tactics:
+      type: object
+      properties:
+        formation:
+          type: string
+          enum: ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "5-3-2", "4-5-1", "3-4-3"]
+        mentality:
+          type: string
+          enum: [defensive, balanced, attacking, gegenpressing]
+        pressing:
+          type: integer
+          description: 1-10
+        tempo:
+          type: integer
+          description: 1-10
+        width:
+          type: integer
+          description: 1-10
+        captainId:
+          type: ["integer", "null"]
+        startingXI:
+          type: array
+          items:
+            $ref: "#/components/schemas/TacticSlot"
+      required: [formation, mentality, pressing, tempo, width, startingXI]
+
+    TacticSlot:
+      type: object
+      properties:
+        slot:
+          type: integer
+        position:
+          type: string
+        playerId:
+          type: ["integer", "null"]
+        playerName:
+          type: ["string", "null"]
+      required: [slot, position]
+
+    TacticsInput:
+      type: object
+      properties:
+        formation:
+          type: string
+          enum: ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "5-3-2", "4-5-1", "3-4-3"]
+        mentality:
+          type: string
+          enum: [defensive, balanced, attacking, gegenpressing]
+        pressing:
+          type: integer
+        tempo:
+          type: integer
+        width:
+          type: integer
+        captainId:
+          type: ["integer", "null"]
+        startingXI:
+          type: array
+          items:
+            $ref: "#/components/schemas/TacticSlot"
+      required: [formation, mentality, pressing, tempo, width, startingXI]
+
+    Fixture:
+      type: object
+      properties:
+        id:
+          type: integer
+        week:
+          type: integer
+        date:
+          type: string
+        homeClubId:
+          type: integer
+        homeClubName:
+          type: string
+        awayClubId:
+          type: integer
+        awayClubName:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, completed]
+        homeScore:
+          type: ["integer", "null"]
+        awayScore:
+          type: ["integer", "null"]
+        isPlayerClubHome:
+          type: boolean
+        isPlayerClubAway:
+          type: boolean
+      required: [id, week, date, homeClubId, homeClubName, awayClubId, awayClubName, status, isPlayerClubHome, isPlayerClubAway]
+
+    MatchEvent:
+      type: object
+      properties:
+        minute:
+          type: integer
+        type:
+          type: string
+          enum: [goal, own_goal, yellow_card, red_card, substitution, penalty]
+        clubId:
+          type: integer
+        playerId:
+          type: ["integer", "null"]
+        playerName:
+          type: string
+        assistPlayerId:
+          type: ["integer", "null"]
+        assistPlayerName:
+          type: ["string", "null"]
+      required: [minute, type, clubId, playerName]
+
+    MatchStats:
+      type: object
+      properties:
+        homePossession:
+          type: integer
+        awayPossession:
+          type: integer
+        homeShots:
+          type: integer
+        awayShots:
+          type: integer
+        homeShotsOnTarget:
+          type: integer
+        awayShotsOnTarget:
+          type: integer
+        homeCorners:
+          type: integer
+        awayCorners:
+          type: integer
+      required: [homePossession, awayPossession, homeShots, awayShots, homeShotsOnTarget, awayShotsOnTarget, homeCorners, awayCorners]
+
+    FixtureDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        week:
+          type: integer
+        date:
+          type: string
+        homeClubId:
+          type: integer
+        homeClubName:
+          type: string
+        awayClubId:
+          type: integer
+        awayClubName:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, completed]
+        homeScore:
+          type: ["integer", "null"]
+        awayScore:
+          type: ["integer", "null"]
+        isPlayerClubHome:
+          type: boolean
+        isPlayerClubAway:
+          type: boolean
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatchEvent"
+        stats:
+          $ref: "#/components/schemas/MatchStats"
+      required: [id, week, date, homeClubId, homeClubName, awayClubId, awayClubName, status, isPlayerClubHome, isPlayerClubAway, events]
+
+    Standing:
+      type: object
+      properties:
+        position:
+          type: integer
+        clubId:
+          type: integer
+        clubName:
+          type: string
+        played:
+          type: integer
+        won:
+          type: integer
+        drawn:
+          type: integer
+        lost:
+          type: integer
+        goalsFor:
+          type: integer
+        goalsAgainst:
+          type: integer
+        goalDifference:
+          type: integer
+        points:
+          type: integer
+        isPlayerClub:
+          type: boolean
+        form:
+          type: array
+          items:
+            type: string
+            enum: [W, D, L]
+      required: [position, clubId, clubName, played, won, drawn, lost, goalsFor, goalsAgainst, goalDifference, points, isPlayerClub, form]
+
+    LeagueTable:
+      type: object
+      properties:
+        leagueName:
+          type: string
+        season:
+          type: integer
+        currentWeek:
+          type: integer
+        standings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Standing"
+      required: [leagueName, season, currentWeek, standings]
+
+    TransferListing:
+      type: object
+      properties:
+        playerId:
+          type: integer
+        playerName:
+          type: string
+        age:
+          type: integer
+        nationality:
+          type: string
+        position:
+          type: string
+        overall:
+          type: integer
+        clubId:
+          type: integer
+        clubName:
+          type: string
+        askingPrice:
+          type: integer
+        weeklySalary:
+          type: integer
+        contractEndsYear:
+          type: integer
+      required: [playerId, playerName, age, nationality, position, overall, clubId, clubName, askingPrice, weeklySalary, contractEndsYear]
+
+    TransferOfferInput:
+      type: object
+      properties:
+        playerId:
+          type: integer
+        offerAmount:
+          type: integer
+        offeredSalary:
+          type: integer
+      required: [playerId, offerAmount, offeredSalary]
+
+    TransferResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        player:
+          $ref: "#/components/schemas/Player"
+      required: [success, message]
+
+    Transfer:
+      type: object
+      properties:
+        id:
+          type: integer
+        playerId:
+          type: integer
+        playerName:
+          type: string
+        fromClubId:
+          type: integer
+        fromClubName:
+          type: string
+        toClubId:
+          type: integer
+        toClubName:
+          type: string
+        fee:
+          type: integer
+        date:
+          type: string
+        type:
+          type: string
+          enum: [purchase, sale]
+      required: [id, playerId, playerName, fromClubId, fromClubName, toClubId, toClubName, fee, date, type]
+
+    InboxMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        type:
+          type: string
+          enum: [match_result, transfer, injury, board, media, contract, general]
+        isRead:
+          type: boolean
+      required: [id, date, subject, body, type, isRead]
+
+    Finances:
+      type: object
+      properties:
+        balance:
+          type: integer
+          description: Current balance in thousands
+        transferBudget:
+          type: integer
+        wageBudget:
+          type: integer
+          description: Weekly wage budget in thousands
+        currentWeeklyWages:
+          type: integer
+        seasonRevenue:
+          type: integer
+        seasonExpenditure:
+          type: integer
+        matchdayRevenue:
+          type: integer
+        sponsorshipRevenue:
+          type: integer
+        transferIncome:
+          type: integer
+        transferSpend:
+          type: integer
+      required: [balance, transferBudget, wageBudget, currentWeeklyWages, seasonRevenue, seasonExpenditure, matchdayRevenue, sponsorshipRevenue, transferIncome, transferSpend]
+
+    PlayerSeasonStat:
+      type: object
+      properties:
+        playerId:
+          type: integer
+        playerName:
+          type: string
+        clubName:
+          type: string
+        position:
+          type: string
+        goals:
+          type: integer
+        assists:
+          type: integer
+        appearances:
+          type: integer
+      required: [playerId, playerName, clubName, position, goals, assists, appearances]
+
+    SeasonStats:
+      type: object
+      properties:
+        topScorers:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlayerSeasonStat"
+        topAssisters:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlayerSeasonStat"
+      required: [topScorers, topAssisters]
