@@ -54,7 +54,7 @@ export default function Training() {
     const updatedSessions = DAYS.map(day => ({ day, ...getSession(day) }));
     setSaving(true);
     await updateSchedule.mutateAsync({
-      data: { sessions: updatedSessions as any, teamFocus: (teamFocus || (schedule?.teamFocus ?? "balanced")) as any },
+      data: { sessions: updatedSessions as any, teamFocus: (teamFocus || (schedule?.teamFocus ?? "balanced")) as any, coachingBonus: schedule?.coachingBonus ?? 0 },
     });
     setEditing({});
     qc.invalidateQueries({ queryKey: ["getTrainingSchedule"] });

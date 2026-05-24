@@ -11,6 +11,7 @@ import {
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { seedGfc } from "./lib/gfcSeeder";
+import { seedGame } from "./lib/seeder";
 
 const app: Express = express();
 
@@ -40,17 +41,20 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
-  })),
-);
+if (process.env.CLERK_SECRET_KEY) {
+  app.use(
+    clerkMiddleware((req) => ({
+      publishableKey: publishableKeyFromHost(
+        getClerkProxyHost(req) ?? "",
+        process.env.CLERK_PUBLISHABLE_KEY,
+      ),
+    })),
+  );
+}
 
 app.use("/api", router);
 
 seedGfc().catch((err) => logger.error({ err }, "Failed to seed GFC data"));
+seedGame().catch((err) => logger.error({ err }, "Failed to seed FM data"));
 
 export default app;

@@ -6,7 +6,7 @@ import { getWeekDate } from "../lib/gameEngine";
 
 const router = Router();
 
-router.get("/contracts", async (req, res) => {
+router.get("/fm/contracts", async (req, res) => {
   const [state] = await db.select().from(gameStateTable).limit(1);
   if (!state?.clubId) return res.status(400).json({ error: "No active game" });
 
@@ -27,7 +27,7 @@ router.get("/contracts", async (req, res) => {
   })));
 });
 
-router.post("/contracts/:playerId/offer", async (req, res) => {
+router.post("/fm/contracts/:playerId/offer", async (req, res) => {
   const [state] = await db.select().from(gameStateTable).limit(1);
   if (!state?.clubId) return res.status(400).json({ error: "No active game" });
 

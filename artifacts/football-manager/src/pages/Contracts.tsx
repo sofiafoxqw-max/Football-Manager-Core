@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListContracts, useOfferContractRenewal } from "@workspace/api-client-react";
+import { useFmListContracts, useOfferContractRenewal } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileText, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
@@ -9,7 +9,7 @@ function OvrBadge({ ovr }: { ovr: number }) {
 }
 
 export default function Contracts() {
-  const { data: contracts } = useListContracts();
+  const { data: contracts } = useFmListContracts();
   const offerRenewal = useOfferContractRenewal();
   const qc = useQueryClient();
 
@@ -26,7 +26,7 @@ export default function Contracts() {
       data: offer,
     });
     setResult(res as any);
-    qc.invalidateQueries({ queryKey: ["listContracts"] });
+    qc.invalidateQueries({ queryKey: ["fmListContracts"] });
     setTimeout(() => setResult(null), 5000);
   };
 

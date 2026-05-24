@@ -1,4 +1,4 @@
-import { useGetLeagueStandings } from "@workspace/api-client-react";
+import { useFmGetLeagueStandings } from "@workspace/api-client-react";
 import { Trophy } from "lucide-react";
 
 function FormPill({ result }: { result: string }) {
@@ -7,7 +7,7 @@ function FormPill({ result }: { result: string }) {
 }
 
 export default function League() {
-  const { data: league, isLoading } = useGetLeagueStandings();
+  const { data: league, isLoading } = useFmGetLeagueStandings();
 
   if (isLoading) return <div className="flex items-center justify-center h-64" style={{ color: "var(--fm-muted)" }}>Loading...</div>;
 

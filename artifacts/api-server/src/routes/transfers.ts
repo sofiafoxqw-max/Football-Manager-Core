@@ -2,16 +2,16 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { playersTable, clubsTable, gameStateTable, transfersTable, inboxTable } from "@workspace/db";
 import { eq, and, ne, lte } from "drizzle-orm";
-import { MakeTransferOfferBody, GetTransferMarketQueryParams } from "@workspace/api-zod";
+import { MakeTransferOfferBody, FmGetTransferMarketQueryParams } from "@workspace/api-zod";
 import { getWeekDate } from "../lib/gameEngine";
 
 const router = Router();
 
-router.get("/transfers/market", async (req, res) => {
+router.get("/fm/transfers/market", async (req, res) => {
   const [state] = await db.select().from(gameStateTable).limit(1);
   if (!state?.clubId) return res.status(400).json({ error: "No active game" });
 
-  const qp = GetTransferMarketQueryParams.safeParse(req.query);
+  const qp = FmGetTransferMarketQueryParams.safeParse(req.query);
   const positionFilter = qp.success ? qp.data.position : undefined;
   const maxValueFilter = qp.success ? qp.data.maxValue : undefined;
 
@@ -51,7 +51,7 @@ router.get("/transfers/market", async (req, res) => {
   })));
 });
 
-router.post("/transfers/offer", async (req, res) => {
+router.post("/fm/transfers/offer", async (req, res) => {
   const parse = MakeTransferOfferBody.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: "Invalid request body" });
@@ -166,7 +166,7 @@ router.post("/transfers/offer", async (req, res) => {
   });
 });
 
-router.get("/transfers", async (_req, res) => {
+router.get("/fm/transfers", async (_req, res) => {
   const [state] = await db.select().from(gameStateTable).limit(1);
   if (!state?.clubId) return res.status(400).json({ error: "No active game" });
 

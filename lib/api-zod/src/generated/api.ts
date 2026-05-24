@@ -820,3 +820,873 @@ export const GetLeaderboardResponse = zod.object({
 })
 
 
+/**
+ * @summary Get current game state
+ */
+export const GetGameStateResponse = zod.object({
+  "started": zod.boolean(),
+  "clubId": zod.number().nullish(),
+  "clubName": zod.string().nullish(),
+  "managerName": zod.string().nullish(),
+  "leagueName": zod.string().nullish(),
+  "currentDate": zod.string().nullish(),
+  "currentWeek": zod.number().nullish(),
+  "totalWeeks": zod.number().nullish(),
+  "season": zod.number().nullish(),
+  "leaguePosition": zod.number().nullish(),
+  "points": zod.number().nullish(),
+  "nextFixtureId": zod.number().nullish(),
+  "nextFixtureOpponent": zod.string().nullish(),
+  "nextFixtureDate": zod.string().nullish(),
+  "nextFixtureIsHome": zod.boolean().nullish(),
+  "unreadMessages": zod.number(),
+  "transferBudget": zod.number().nullish(),
+  "injuredCount": zod.number().nullish(),
+  "morale": zod.string().nullish()
+})
+
+
+/**
+ * @summary List all clubs available for selection
+ */
+export const FmListClubsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "city": zod.string(),
+  "country": zod.string(),
+  "leagueName": zod.string(),
+  "reputation": zod.number(),
+  "budget": zod.number(),
+  "stadiumName": zod.string(),
+  "stadiumCapacity": zod.number(),
+  "colors": zod.string(),
+  "description": zod.string()
+})
+export const FmListClubsResponse = zod.array(FmListClubsResponseItem)
+
+
+/**
+ * @summary Start a new game with a selected club
+ */
+export const SetupGameBody = zod.object({
+  "clubId": zod.number(),
+  "managerName": zod.string()
+})
+
+
+/**
+ * @summary Advance game by one week
+ */
+export const AdvanceGameResponse = zod.object({
+  "started": zod.boolean(),
+  "clubId": zod.number().nullish(),
+  "clubName": zod.string().nullish(),
+  "managerName": zod.string().nullish(),
+  "leagueName": zod.string().nullish(),
+  "currentDate": zod.string().nullish(),
+  "currentWeek": zod.number().nullish(),
+  "totalWeeks": zod.number().nullish(),
+  "season": zod.number().nullish(),
+  "leaguePosition": zod.number().nullish(),
+  "points": zod.number().nullish(),
+  "nextFixtureId": zod.number().nullish(),
+  "nextFixtureOpponent": zod.string().nullish(),
+  "nextFixtureDate": zod.string().nullish(),
+  "nextFixtureIsHome": zod.boolean().nullish(),
+  "unreadMessages": zod.number(),
+  "transferBudget": zod.number().nullish(),
+  "injuredCount": zod.number().nullish(),
+  "morale": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get the player's club squad
+ */
+export const GetSquadResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "nationality": zod.string(),
+  "position": zod.string(),
+  "preferredFoot": zod.string(),
+  "overall": zod.number(),
+  "potential": zod.number(),
+  "attributes": zod.object({
+  "pace": zod.number(),
+  "shooting": zod.number(),
+  "passing": zod.number(),
+  "dribbling": zod.number(),
+  "defending": zod.number(),
+  "physicality": zod.number(),
+  "goalkeeping": zod.number()
+}),
+  "form": zod.number(),
+  "fitness": zod.number(),
+  "morale": zod.string(),
+  "value": zod.number(),
+  "weeklySalary": zod.number(),
+  "contractEndsYear": zod.number(),
+  "seasonGoals": zod.number(),
+  "seasonAssists": zod.number(),
+  "seasonAppearances": zod.number(),
+  "clubId": zod.number(),
+  "isOnTransferList": zod.boolean(),
+  "isInjured": zod.boolean(),
+  "injuryWeeksLeft": zod.number(),
+  "injuryType": zod.string().nullish(),
+  "role": zod.string(),
+  "trainingFocus": zod.string().nullish(),
+  "playerDescription": zod.string()
+})
+export const GetSquadResponse = zod.array(GetSquadResponseItem)
+
+
+/**
+ * @summary Get current tactics
+ */
+export const GetTacticsResponse = zod.object({
+  "formation": zod.string(),
+  "mentality": zod.string(),
+  "pressing": zod.number(),
+  "tempo": zod.number(),
+  "width": zod.number(),
+  "captainId": zod.number().nullish(),
+  "startingXI": zod.array(zod.object({
+  "slot": zod.number(),
+  "position": zod.string(),
+  "playerId": zod.number().nullish(),
+  "playerName": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Update tactics
+ */
+export const UpdateTacticsBody = zod.object({
+  "formation": zod.string(),
+  "mentality": zod.string(),
+  "pressing": zod.number(),
+  "tempo": zod.number(),
+  "width": zod.number(),
+  "defensiveLine": zod.number().optional(),
+  "captainId": zod.number().nullish(),
+  "startingXI": zod.array(zod.object({
+  "slot": zod.number(),
+  "position": zod.string(),
+  "playerId": zod.number().nullish(),
+  "playerName": zod.string().nullish()
+}))
+})
+
+export const UpdateTacticsResponse = zod.object({
+  "formation": zod.string(),
+  "mentality": zod.string(),
+  "pressing": zod.number(),
+  "tempo": zod.number(),
+  "width": zod.number(),
+  "captainId": zod.number().nullish(),
+  "startingXI": zod.array(zod.object({
+  "slot": zod.number(),
+  "position": zod.string(),
+  "playerId": zod.number().nullish(),
+  "playerName": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Get training schedule
+ */
+export const GetTrainingScheduleResponse = zod.object({
+  "sessions": zod.array(zod.object({
+  "day": zod.string(),
+  "type": zod.string(),
+  "intensity": zod.string()
+})),
+  "teamFocus": zod.string(),
+  "coachingBonus": zod.number()
+})
+
+
+/**
+ * @summary Update training schedule
+ */
+export const UpdateTrainingScheduleBody = zod.object({
+  "sessions": zod.array(zod.object({
+  "day": zod.string(),
+  "type": zod.string(),
+  "intensity": zod.string()
+})),
+  "teamFocus": zod.string(),
+  "coachingBonus": zod.number()
+})
+
+export const UpdateTrainingScheduleResponse = zod.object({
+  "sessions": zod.array(zod.object({
+  "day": zod.string(),
+  "type": zod.string(),
+  "intensity": zod.string()
+})),
+  "teamFocus": zod.string(),
+  "coachingBonus": zod.number()
+})
+
+
+/**
+ * @summary Get individual player training assignments
+ */
+export const GetIndividualTrainingResponseItem = zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "position": zod.string(),
+  "overall": zod.number(),
+  "focus": zod.string().nullish(),
+  "progress": zod.number()
+})
+export const GetIndividualTrainingResponse = zod.array(GetIndividualTrainingResponseItem)
+
+
+/**
+ * @summary Update individual player training
+ */
+export const UpdateIndividualTrainingBody = zod.object({
+  "assignments": zod.array(zod.object({
+  "playerId": zod.number(),
+  "focus": zod.string().nullish()
+}))
+})
+
+export const UpdateIndividualTrainingResponseItem = zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "position": zod.string(),
+  "overall": zod.number(),
+  "focus": zod.string().nullish(),
+  "progress": zod.number()
+})
+export const UpdateIndividualTrainingResponse = zod.array(UpdateIndividualTrainingResponseItem)
+
+
+/**
+ * @summary List fixtures
+ */
+export const ListFixturesQueryParams = zod.object({
+  "status": zod.coerce.string().optional()
+})
+
+export const ListFixturesResponseItem = zod.object({
+  "id": zod.number(),
+  "week": zod.number(),
+  "date": zod.string(),
+  "homeClubId": zod.number(),
+  "homeClubName": zod.string(),
+  "awayClubId": zod.number(),
+  "awayClubName": zod.string(),
+  "status": zod.string(),
+  "homeScore": zod.number().nullish(),
+  "awayScore": zod.number().nullish(),
+  "isPlayerClubHome": zod.boolean(),
+  "isPlayerClubAway": zod.boolean()
+})
+export const ListFixturesResponse = zod.array(ListFixturesResponseItem)
+
+
+/**
+ * @summary Get fixture details
+ */
+export const GetFixtureParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetFixtureResponse = zod.object({
+  "id": zod.number(),
+  "week": zod.number(),
+  "date": zod.string(),
+  "homeClubId": zod.number(),
+  "homeClubName": zod.string(),
+  "awayClubId": zod.number(),
+  "awayClubName": zod.string(),
+  "status": zod.string(),
+  "homeScore": zod.number().nullish(),
+  "awayScore": zod.number().nullish(),
+  "isPlayerClubHome": zod.boolean(),
+  "isPlayerClubAway": zod.boolean(),
+  "events": zod.array(zod.object({
+  "minute": zod.number(),
+  "type": zod.string(),
+  "clubId": zod.number(),
+  "playerId": zod.number().nullish(),
+  "playerName": zod.string(),
+  "assistPlayerId": zod.number().nullish(),
+  "assistPlayerName": zod.string().nullish()
+})),
+  "stats": zod.object({
+  "homePossession": zod.number(),
+  "awayPossession": zod.number(),
+  "homeShots": zod.number(),
+  "awayShots": zod.number(),
+  "homeShotsOnTarget": zod.number(),
+  "awayShotsOnTarget": zod.number(),
+  "homeCorners": zod.number(),
+  "awayCorners": zod.number(),
+  "homeYellowCards": zod.number().optional(),
+  "awayYellowCards": zod.number().optional()
+}),
+  "playerRatings": zod.array(zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "position": zod.string(),
+  "rating": zod.number(),
+  "goals": zod.number(),
+  "assists": zod.number()
+})).optional()
+})
+
+
+/**
+ * @summary Simulate a match
+ */
+export const SimulateMatchParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SimulateMatchResponse = zod.object({
+  "id": zod.number(),
+  "week": zod.number(),
+  "date": zod.string(),
+  "homeClubId": zod.number(),
+  "homeClubName": zod.string(),
+  "awayClubId": zod.number(),
+  "awayClubName": zod.string(),
+  "status": zod.string(),
+  "homeScore": zod.number().nullish(),
+  "awayScore": zod.number().nullish(),
+  "isPlayerClubHome": zod.boolean(),
+  "isPlayerClubAway": zod.boolean(),
+  "events": zod.array(zod.object({
+  "minute": zod.number(),
+  "type": zod.string(),
+  "clubId": zod.number(),
+  "playerId": zod.number().nullish(),
+  "playerName": zod.string(),
+  "assistPlayerId": zod.number().nullish(),
+  "assistPlayerName": zod.string().nullish()
+})),
+  "stats": zod.object({
+  "homePossession": zod.number(),
+  "awayPossession": zod.number(),
+  "homeShots": zod.number(),
+  "awayShots": zod.number(),
+  "homeShotsOnTarget": zod.number(),
+  "awayShotsOnTarget": zod.number(),
+  "homeCorners": zod.number(),
+  "awayCorners": zod.number(),
+  "homeYellowCards": zod.number().optional(),
+  "awayYellowCards": zod.number().optional()
+}),
+  "playerRatings": zod.array(zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "position": zod.string(),
+  "rating": zod.number(),
+  "goals": zod.number(),
+  "assists": zod.number()
+})).optional()
+})
+
+
+/**
+ * @summary Get live match data with commentary
+ */
+export const GetLiveMatchParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetLiveMatchResponse = zod.object({
+  "fixtureId": zod.number(),
+  "status": zod.string(),
+  "currentMinute": zod.number(),
+  "homeScore": zod.number(),
+  "awayScore": zod.number(),
+  "homeClubName": zod.string(),
+  "awayClubName": zod.string(),
+  "commentary": zod.array(zod.object({
+  "minute": zod.number(),
+  "text": zod.string(),
+  "type": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "minute": zod.number(),
+  "type": zod.string(),
+  "clubId": zod.number(),
+  "playerId": zod.number().nullish(),
+  "playerName": zod.string(),
+  "assistPlayerId": zod.number().nullish(),
+  "assistPlayerName": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Get fixture with commentary and player ratings
+ */
+export const GetFixtureDetailParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetFixtureDetailResponse = zod.object({
+  "fixtureId": zod.number(),
+  "status": zod.string(),
+  "currentMinute": zod.number(),
+  "homeScore": zod.number(),
+  "awayScore": zod.number(),
+  "homeClubName": zod.string(),
+  "awayClubName": zod.string(),
+  "commentary": zod.array(zod.object({
+  "minute": zod.number(),
+  "text": zod.string(),
+  "type": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "minute": zod.number(),
+  "type": zod.string(),
+  "clubId": zod.number(),
+  "playerId": zod.number().nullish(),
+  "playerName": zod.string(),
+  "assistPlayerId": zod.number().nullish(),
+  "assistPlayerName": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Get transfer market listings
+ */
+export const FmGetTransferMarketQueryParams = zod.object({
+  "position": zod.coerce.string().optional(),
+  "maxValue": zod.coerce.number().optional()
+})
+
+export const FmGetTransferMarketResponseItem = zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "age": zod.number(),
+  "nationality": zod.string(),
+  "position": zod.string(),
+  "overall": zod.number(),
+  "clubId": zod.number(),
+  "clubName": zod.string(),
+  "askingPrice": zod.number(),
+  "weeklySalary": zod.number(),
+  "contractEndsYear": zod.number()
+})
+export const FmGetTransferMarketResponse = zod.array(FmGetTransferMarketResponseItem)
+
+
+/**
+ * @summary Make a transfer offer for a player
+ */
+export const MakeTransferOfferBody = zod.object({
+  "playerId": zod.number(),
+  "offerAmount": zod.number(),
+  "offeredSalary": zod.number()
+})
+
+export const MakeTransferOfferResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string(),
+  "player": zod.object({
+
+}).passthrough().nullish()
+})
+
+
+/**
+ * @summary List completed transfers for the player's club
+ */
+export const ListTransfersResponseItem = zod.object({
+  "id": zod.number(),
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "fromClubId": zod.number(),
+  "fromClubName": zod.string(),
+  "toClubId": zod.number(),
+  "toClubName": zod.string(),
+  "fee": zod.number(),
+  "date": zod.string(),
+  "type": zod.string()
+})
+export const ListTransfersResponse = zod.array(ListTransfersResponseItem)
+
+
+/**
+ * @summary Get hired staff
+ */
+export const GetStaffResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "rating": zod.number(),
+  "weeklySalary": zod.number(),
+  "clubId": zod.number().nullish(),
+  "isHired": zod.boolean()
+})
+export const GetStaffResponse = zod.array(GetStaffResponseItem)
+
+
+/**
+ * @summary Get available staff for hire
+ */
+export const GetStaffMarketResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "rating": zod.number(),
+  "weeklySalary": zod.number(),
+  "clubId": zod.number().nullish(),
+  "isHired": zod.boolean()
+})
+export const GetStaffMarketResponse = zod.array(GetStaffMarketResponseItem)
+
+
+/**
+ * @summary Hire a staff member
+ */
+export const HireStaffBody = zod.object({
+  "staffId": zod.number()
+})
+
+export const HireStaffResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "rating": zod.number(),
+  "weeklySalary": zod.number(),
+  "clubId": zod.number().nullish(),
+  "isHired": zod.boolean()
+})
+
+
+/**
+ * @summary Get inbox messages
+ */
+export const ListInboxMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "date": zod.string(),
+  "subject": zod.string(),
+  "body": zod.string(),
+  "type": zod.string(),
+  "isRead": zod.boolean()
+})
+export const ListInboxMessagesResponse = zod.array(ListInboxMessagesResponseItem)
+
+
+/**
+ * @summary Mark a message as read
+ */
+export const MarkMessageReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkMessageReadResponse = zod.object({
+  "id": zod.number(),
+  "date": zod.string(),
+  "subject": zod.string(),
+  "body": zod.string(),
+  "type": zod.string(),
+  "isRead": zod.boolean()
+})
+
+
+/**
+ * @summary Get scouting shortlist
+ */
+export const GetShortlistResponseItem = zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "age": zod.number(),
+  "nationality": zod.string(),
+  "position": zod.string(),
+  "overall": zod.number(),
+  "potential": zod.number(),
+  "clubId": zod.number(),
+  "clubName": zod.string(),
+  "value": zod.number(),
+  "weeklySalary": zod.number().optional(),
+  "isOnTransferList": zod.boolean().optional(),
+  "scoutComment": zod.string(),
+  "dateAdded": zod.string().optional()
+})
+export const GetShortlistResponse = zod.array(GetShortlistResponseItem)
+
+
+/**
+ * @summary Add player to shortlist
+ */
+export const AddToShortlistBody = zod.object({
+  "playerId": zod.number()
+})
+
+export const AddToShortlistResponse = zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "age": zod.number(),
+  "nationality": zod.string(),
+  "position": zod.string(),
+  "overall": zod.number(),
+  "potential": zod.number(),
+  "clubId": zod.number(),
+  "clubName": zod.string(),
+  "value": zod.number(),
+  "weeklySalary": zod.number().optional(),
+  "isOnTransferList": zod.boolean().optional(),
+  "scoutComment": zod.string(),
+  "dateAdded": zod.string().optional()
+})
+
+
+/**
+ * @summary Remove player from shortlist
+ */
+export const RemoveFromShortlistParams = zod.object({
+  "playerId": zod.coerce.number()
+})
+
+export const RemoveFromShortlistResponse = zod.object({
+
+}).passthrough()
+
+
+/**
+ * @summary Search for players via scouting
+ */
+export const ScoutSearchBody = zod.object({
+  "position": zod.string().nullish(),
+  "minOverall": zod.number().nullish(),
+  "maxAge": zod.number().nullish(),
+  "maxValue": zod.number().nullish(),
+  "nationality": zod.string().nullish()
+})
+
+export const ScoutSearchResponseItem = zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "age": zod.number(),
+  "nationality": zod.string(),
+  "position": zod.string(),
+  "overall": zod.number(),
+  "potential": zod.number(),
+  "clubId": zod.number(),
+  "clubName": zod.string(),
+  "value": zod.number(),
+  "weeklySalary": zod.number().optional(),
+  "isOnTransferList": zod.boolean().optional(),
+  "scoutComment": zod.string(),
+  "dateAdded": zod.string().optional()
+})
+export const ScoutSearchResponse = zod.array(ScoutSearchResponseItem)
+
+
+/**
+ * @summary Get set piece assignments
+ */
+export const GetSetPiecesResponse = zod.object({
+  "routines": zod.array(zod.object({
+  "type": zod.string(),
+  "taker": zod.string(),
+  "style": zod.string()
+}))
+})
+
+
+/**
+ * @summary Update set piece assignments
+ */
+export const UpdateSetPiecesBody = zod.object({
+  "routines": zod.array(zod.object({
+  "type": zod.string(),
+  "taker": zod.string(),
+  "style": zod.string()
+}))
+})
+
+export const UpdateSetPiecesResponse = zod.object({
+  "routines": zod.array(zod.object({
+  "type": zod.string(),
+  "taker": zod.string(),
+  "style": zod.string()
+}))
+})
+
+
+/**
+ * @summary Get press conference questions
+ */
+export const GetPressConferenceResponse = zod.object({
+  "type": zod.string(),
+  "questions": zod.array(zod.object({
+  "id": zod.number(),
+  "question": zod.string(),
+  "context": zod.string(),
+  "options": zod.array(zod.object({
+  "id": zod.string(),
+  "text": zod.string(),
+  "tone": zod.string()
+}))
+})),
+  "opponentName": zod.string().nullish()
+})
+
+
+/**
+ * @summary Answer a press conference question
+ */
+export const AnswerPressConferenceBody = zod.object({
+  "questionId": zod.number(),
+  "optionId": zod.string()
+})
+
+export const AnswerPressConferenceResponse = zod.object({
+  "moraleEffect": zod.string(),
+  "message": zod.string(),
+  "moraleChange": zod.number()
+})
+
+
+/**
+ * @summary Give a team talk
+ */
+export const GiveTeamTalkBody = zod.object({
+  "tone": zod.string(),
+  "timing": zod.string()
+})
+
+export const GiveTeamTalkResponse = zod.object({
+  "moraleEffect": zod.string(),
+  "message": zod.string(),
+  "affectedPlayers": zod.number()
+})
+
+
+/**
+ * @summary Get club finances
+ */
+export const GetFinancesResponse = zod.object({
+  "balance": zod.number(),
+  "transferBudget": zod.number(),
+  "wageBudget": zod.number(),
+  "currentWeeklyWages": zod.number(),
+  "seasonRevenue": zod.number(),
+  "seasonExpenditure": zod.number(),
+  "matchdayRevenue": zod.number(),
+  "sponsorshipRevenue": zod.number(),
+  "transferIncome": zod.number(),
+  "transferSpend": zod.number(),
+  "prizeMoneyEstimate": zod.number().optional()
+})
+
+
+/**
+ * @summary Get league standings
+ */
+export const FmGetLeagueStandingsResponse = zod.object({
+  "leagueName": zod.string(),
+  "season": zod.number(),
+  "currentWeek": zod.number(),
+  "standings": zod.array(zod.object({
+  "position": zod.number(),
+  "clubId": zod.number(),
+  "clubName": zod.string(),
+  "played": zod.number(),
+  "won": zod.number(),
+  "drawn": zod.number(),
+  "lost": zod.number(),
+  "goalsFor": zod.number(),
+  "goalsAgainst": zod.number(),
+  "goalDifference": zod.number(),
+  "points": zod.number(),
+  "isPlayerClub": zod.boolean(),
+  "form": zod.array(zod.string())
+}))
+})
+
+
+/**
+ * @summary Get season statistics
+ */
+export const GetSeasonStatsResponse = zod.object({
+  "topScorers": zod.array(zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "clubName": zod.string(),
+  "position": zod.string(),
+  "goals": zod.number(),
+  "assists": zod.number(),
+  "appearances": zod.number()
+})),
+  "topAssisters": zod.array(zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "clubName": zod.string(),
+  "position": zod.string(),
+  "goals": zod.number(),
+  "assists": zod.number(),
+  "appearances": zod.number()
+}))
+})
+
+
+/**
+ * @summary Get injured players
+ */
+export const GetInjuriesResponseItem = zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "position": zod.string(),
+  "injuryType": zod.string(),
+  "weeksRemaining": zod.number(),
+  "returnDate": zod.string(),
+  "severity": zod.string()
+})
+export const GetInjuriesResponse = zod.array(GetInjuriesResponseItem)
+
+
+/**
+ * @summary Get players with expiring contracts
+ */
+export const FmListContractsResponseItem = zod.object({
+  "playerId": zod.number(),
+  "playerName": zod.string(),
+  "position": zod.string(),
+  "overall": zod.number(),
+  "age": zod.number(),
+  "currentSalary": zod.number(),
+  "contractEndsYear": zod.number(),
+  "morale": zod.string(),
+  "wantsToLeave": zod.boolean()
+})
+export const FmListContractsResponse = zod.array(FmListContractsResponseItem)
+
+
+/**
+ * @summary Offer a contract renewal to a player
+ */
+export const OfferContractRenewalParams = zod.object({
+  "playerId": zod.coerce.number()
+})
+
+export const OfferContractRenewalBody = zod.object({
+  "weeklySalary": zod.number(),
+  "yearsLength": zod.number()
+})
+
+export const OfferContractRenewalResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string(),
+  "newContractEndsYear": zod.number().nullish(),
+  "newWeeklySalary": zod.number().nullish()
+})
+
+

@@ -439,6 +439,480 @@ export interface Leaderboard {
   topCoaches: LeaderboardEntry[];
 }
 
+export interface GameState {
+  started: boolean;
+  /** @nullable */
+  clubId?: number | null;
+  /** @nullable */
+  clubName?: string | null;
+  /** @nullable */
+  managerName?: string | null;
+  /** @nullable */
+  leagueName?: string | null;
+  /** @nullable */
+  currentDate?: string | null;
+  /** @nullable */
+  currentWeek?: number | null;
+  /** @nullable */
+  totalWeeks?: number | null;
+  /** @nullable */
+  season?: number | null;
+  /** @nullable */
+  leaguePosition?: number | null;
+  /** @nullable */
+  points?: number | null;
+  /** @nullable */
+  nextFixtureId?: number | null;
+  /** @nullable */
+  nextFixtureOpponent?: string | null;
+  /** @nullable */
+  nextFixtureDate?: string | null;
+  /** @nullable */
+  nextFixtureIsHome?: boolean | null;
+  unreadMessages: number;
+  /** @nullable */
+  transferBudget?: number | null;
+  /** @nullable */
+  injuredCount?: number | null;
+  /** @nullable */
+  morale?: string | null;
+}
+
+export interface FmClub {
+  id: number;
+  name: string;
+  city: string;
+  country: string;
+  leagueName: string;
+  reputation: number;
+  budget: number;
+  stadiumName: string;
+  stadiumCapacity: number;
+  colors: string;
+  description: string;
+}
+
+export interface SetupGameInput {
+  clubId: number;
+  managerName: string;
+}
+
+export interface PlayerAttributes {
+  pace: number;
+  shooting: number;
+  passing: number;
+  dribbling: number;
+  defending: number;
+  physicality: number;
+  goalkeeping: number;
+}
+
+export interface FmPlayer {
+  id: number;
+  name: string;
+  age: number;
+  nationality: string;
+  position: string;
+  preferredFoot: string;
+  overall: number;
+  potential: number;
+  attributes: PlayerAttributes;
+  form: number;
+  fitness: number;
+  morale: string;
+  value: number;
+  weeklySalary: number;
+  contractEndsYear: number;
+  seasonGoals: number;
+  seasonAssists: number;
+  seasonAppearances: number;
+  clubId: number;
+  isOnTransferList: boolean;
+  isInjured: boolean;
+  injuryWeeksLeft: number;
+  /** @nullable */
+  injuryType?: string | null;
+  role: string;
+  /** @nullable */
+  trainingFocus?: string | null;
+  playerDescription: string;
+}
+
+export interface TacticsSlot {
+  slot: number;
+  position: string;
+  /** @nullable */
+  playerId?: number | null;
+  /** @nullable */
+  playerName?: string | null;
+}
+
+export interface Tactics {
+  formation: string;
+  mentality: string;
+  pressing: number;
+  tempo: number;
+  width: number;
+  /** @nullable */
+  captainId?: number | null;
+  startingXI: TacticsSlot[];
+}
+
+export interface UpdateTacticsInput {
+  formation: string;
+  mentality: string;
+  pressing: number;
+  tempo: number;
+  width: number;
+  defensiveLine?: number;
+  /** @nullable */
+  captainId?: number | null;
+  startingXI: TacticsSlot[];
+}
+
+export interface TrainingSession {
+  day: string;
+  type: string;
+  intensity: string;
+}
+
+export interface TrainingSchedule {
+  sessions: TrainingSession[];
+  teamFocus: string;
+  coachingBonus: number;
+}
+
+export interface IndividualTraining {
+  playerId: number;
+  playerName: string;
+  position: string;
+  overall: number;
+  /** @nullable */
+  focus?: string | null;
+  progress: number;
+}
+
+export interface MatchEvent {
+  minute: number;
+  type: string;
+  clubId: number;
+  /** @nullable */
+  playerId?: number | null;
+  playerName: string;
+  /** @nullable */
+  assistPlayerId?: number | null;
+  /** @nullable */
+  assistPlayerName?: string | null;
+}
+
+export interface MatchStats {
+  homePossession: number;
+  awayPossession: number;
+  homeShots: number;
+  awayShots: number;
+  homeShotsOnTarget: number;
+  awayShotsOnTarget: number;
+  homeCorners: number;
+  awayCorners: number;
+  homeYellowCards?: number;
+  awayYellowCards?: number;
+}
+
+export interface Fixture {
+  id: number;
+  week: number;
+  date: string;
+  homeClubId: number;
+  homeClubName: string;
+  awayClubId: number;
+  awayClubName: string;
+  status: string;
+  /** @nullable */
+  homeScore?: number | null;
+  /** @nullable */
+  awayScore?: number | null;
+  isPlayerClubHome: boolean;
+  isPlayerClubAway: boolean;
+}
+
+export type FixtureDetailPlayerRatingsItem = {
+  playerId: number;
+  playerName: string;
+  position: string;
+  rating: number;
+  goals: number;
+  assists: number;
+};
+
+export interface FixtureDetail {
+  id: number;
+  week: number;
+  date: string;
+  homeClubId: number;
+  homeClubName: string;
+  awayClubId: number;
+  awayClubName: string;
+  status: string;
+  /** @nullable */
+  homeScore?: number | null;
+  /** @nullable */
+  awayScore?: number | null;
+  isPlayerClubHome: boolean;
+  isPlayerClubAway: boolean;
+  events: MatchEvent[];
+  stats: MatchStats;
+  playerRatings?: FixtureDetailPlayerRatingsItem[];
+}
+
+export interface CommentaryLine {
+  minute: number;
+  text: string;
+  type: string;
+}
+
+export interface LiveMatch {
+  fixtureId: number;
+  status: string;
+  currentMinute: number;
+  homeScore: number;
+  awayScore: number;
+  homeClubName: string;
+  awayClubName: string;
+  commentary: CommentaryLine[];
+  events: MatchEvent[];
+}
+
+export interface TransferMarketPlayer {
+  playerId: number;
+  playerName: string;
+  age: number;
+  nationality: string;
+  position: string;
+  overall: number;
+  clubId: number;
+  clubName: string;
+  askingPrice: number;
+  weeklySalary: number;
+  contractEndsYear: number;
+}
+
+export interface TransferOfferInput {
+  playerId: number;
+  offerAmount: number;
+  offeredSalary: number;
+}
+
+export type TransferOfferResultPlayer = { [key: string]: unknown } | null;
+
+export interface TransferOfferResult {
+  success: boolean;
+  message: string;
+  player?: TransferOfferResultPlayer;
+}
+
+export interface FmTransfer {
+  id: number;
+  playerId: number;
+  playerName: string;
+  fromClubId: number;
+  fromClubName: string;
+  toClubId: number;
+  toClubName: string;
+  fee: number;
+  date: string;
+  type: string;
+}
+
+export interface StaffMember {
+  id: number;
+  name: string;
+  role: string;
+  rating: number;
+  weeklySalary: number;
+  /** @nullable */
+  clubId?: number | null;
+  isHired: boolean;
+}
+
+export interface InboxMessage {
+  id: number;
+  date: string;
+  subject: string;
+  body: string;
+  type: string;
+  isRead: boolean;
+}
+
+export interface ShortlistEntry {
+  playerId: number;
+  playerName: string;
+  age: number;
+  nationality: string;
+  position: string;
+  overall: number;
+  potential: number;
+  clubId: number;
+  clubName: string;
+  value: number;
+  weeklySalary?: number;
+  isOnTransferList?: boolean;
+  scoutComment: string;
+  dateAdded?: string;
+}
+
+export interface ScoutSearchInput {
+  /** @nullable */
+  position?: string | null;
+  /** @nullable */
+  minOverall?: number | null;
+  /** @nullable */
+  maxAge?: number | null;
+  /** @nullable */
+  maxValue?: number | null;
+  /** @nullable */
+  nationality?: string | null;
+}
+
+export interface SetPieceRoutine {
+  type: string;
+  taker: string;
+  style: string;
+}
+
+export interface SetPieces {
+  routines: SetPieceRoutine[];
+}
+
+export interface PressConferenceOption {
+  id: string;
+  text: string;
+  tone: string;
+}
+
+export interface PressConferenceQuestion {
+  id: number;
+  question: string;
+  context: string;
+  options: PressConferenceOption[];
+}
+
+export interface PressConference {
+  type: string;
+  questions: PressConferenceQuestion[];
+  /** @nullable */
+  opponentName?: string | null;
+}
+
+export interface PressConferenceAnswerInput {
+  questionId: number;
+  optionId: string;
+}
+
+export interface PressConferenceAnswerResult {
+  moraleEffect: string;
+  message: string;
+  moraleChange: number;
+}
+
+export interface TeamTalkInput {
+  tone: string;
+  timing: string;
+}
+
+export interface TeamTalkResult {
+  moraleEffect: string;
+  message: string;
+  affectedPlayers: number;
+}
+
+export interface Finances {
+  balance: number;
+  transferBudget: number;
+  wageBudget: number;
+  currentWeeklyWages: number;
+  seasonRevenue: number;
+  seasonExpenditure: number;
+  matchdayRevenue: number;
+  sponsorshipRevenue: number;
+  transferIncome: number;
+  transferSpend: number;
+  prizeMoneyEstimate?: number;
+}
+
+export interface LeagueStanding {
+  position: number;
+  clubId: number;
+  clubName: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  isPlayerClub: boolean;
+  form: string[];
+}
+
+export interface LeagueStandings {
+  leagueName: string;
+  season: number;
+  currentWeek: number;
+  standings: LeagueStanding[];
+}
+
+export interface SeasonStatPlayer {
+  playerId: number;
+  playerName: string;
+  clubName: string;
+  position: string;
+  goals: number;
+  assists: number;
+  appearances: number;
+}
+
+export interface SeasonStats {
+  topScorers: SeasonStatPlayer[];
+  topAssisters: SeasonStatPlayer[];
+}
+
+export interface InjuredPlayer {
+  playerId: number;
+  playerName: string;
+  position: string;
+  injuryType: string;
+  weeksRemaining: number;
+  returnDate: string;
+  severity: string;
+}
+
+export interface FmContractPlayer {
+  playerId: number;
+  playerName: string;
+  position: string;
+  overall: number;
+  age: number;
+  currentSalary: number;
+  contractEndsYear: number;
+  morale: string;
+  wantsToLeave: boolean;
+}
+
+export interface ContractOfferInput {
+  weeklySalary: number;
+  yearsLength: number;
+}
+
+export interface ContractOfferResult {
+  success: boolean;
+  message: string;
+  /** @nullable */
+  newContractEndsYear?: number | null;
+  /** @nullable */
+  newWeeklySalary?: number | null;
+}
+
 export type ListClubsParams = {
 leagueId?: number;
 /**
@@ -464,4 +938,33 @@ leagueId?: number;
 export type ListTransactionsParams = {
 limit?: number;
 };
+
+export type UpdateIndividualTrainingBodyAssignmentsItem = {
+  playerId: number;
+  /** @nullable */
+  focus?: string | null;
+};
+
+export type UpdateIndividualTrainingBody = {
+  assignments: UpdateIndividualTrainingBodyAssignmentsItem[];
+};
+
+export type ListFixturesParams = {
+status?: string;
+};
+
+export type FmGetTransferMarketParams = {
+position?: string;
+maxValue?: number;
+};
+
+export type HireStaffBody = {
+  staffId: number;
+};
+
+export type AddToShortlistBody = {
+  playerId: number;
+};
+
+export type RemoveFromShortlist200 = { [key: string]: unknown };
 

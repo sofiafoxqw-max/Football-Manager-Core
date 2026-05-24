@@ -104,7 +104,7 @@ export default function Scouting() {
                     <td><span style={{ color: "#60a5fa" }}>{p.potential}</span></td>
                     <td><span style={{ color: "var(--fm-muted)" }}>{p.clubName}</span></td>
                     <td><span style={{ color: "#34d399" }}>£{(p.value / 1000).toFixed(0)}k</span></td>
-                    <td><span style={{ color: "var(--fm-muted)" }}>£{p.weeklySalary.toLocaleString()}pw</span></td>
+                    <td><span style={{ color: "var(--fm-muted)" }}>£{(p.weeklySalary ?? 0).toLocaleString()}pw</span></td>
                     <td>
                       {p.isOnTransferList
                         ? <span className="fm-badge" style={{ background: "#10b98122", color: "#10b981" }}>For Sale</span>

@@ -78,7 +78,7 @@ export default function Tactics() {
   const handleSave = async () => {
     setSaving(true);
     await updateTactics.mutateAsync({
-      data: { formation: formation as any, mentality: mentality as any, pressing: pressing as any, tempo: tempo as any, width: 50, defensiveLine: defensiveLine as any, captainId: captainId ?? undefined, startingXI: [], instructions: [] }
+      data: { formation: formation as any, mentality: mentality as any, pressing: pressing as any, tempo: tempo as any, width: 50, defensiveLine: defensiveLine as any, captainId: captainId ?? undefined, startingXI: [] }
     });
     qc.invalidateQueries({ queryKey: getGetTacticsQueryKey() });
     setSaving(false);

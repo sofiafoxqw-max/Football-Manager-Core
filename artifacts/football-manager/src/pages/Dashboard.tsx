@@ -1,4 +1,4 @@
-import { useGetGameState, useGetFinances, useListFixtures, useAdvanceGame, useGetLeagueStandings, getGetGameStateQueryKey, getListFixturesQueryKey, getGetFinancesQueryKey, getGetLeagueStandingsQueryKey, getGetSquadQueryKey } from "@workspace/api-client-react";
+import { useGetGameState, useGetFinances, useListFixtures, useAdvanceGame, useFmGetLeagueStandings, getFmGetLeagueStandingsQueryKey, getGetGameStateQueryKey, getListFixturesQueryKey, getGetFinancesQueryKey, getGetSquadQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { CalendarDays, Trophy, DollarSign, Activity, ChevronRight, ArrowRight, AlertTriangle } from "lucide-react";
@@ -31,7 +31,7 @@ export default function Dashboard() {
   const { data: gameState } = useGetGameState();
   const { data: finances } = useGetFinances();
   const { data: fixtures } = useListFixtures();
-  const { data: league } = useGetLeagueStandings();
+  const { data: league } = useFmGetLeagueStandings();
   const advanceGame = useAdvanceGame();
   const qc = useQueryClient();
 
@@ -41,7 +41,7 @@ export default function Dashboard() {
         qc.invalidateQueries({ queryKey: getGetGameStateQueryKey() });
         qc.invalidateQueries({ queryKey: getListFixturesQueryKey() });
         qc.invalidateQueries({ queryKey: getGetFinancesQueryKey() });
-        qc.invalidateQueries({ queryKey: getGetLeagueStandingsQueryKey() });
+        qc.invalidateQueries({ queryKey: getFmGetLeagueStandingsQueryKey() });
         qc.invalidateQueries({ queryKey: getGetSquadQueryKey() });
       }
     });

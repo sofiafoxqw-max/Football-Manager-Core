@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetTransferMarket, useListTransfers, useMakeTransferOffer } from "@workspace/api-client-react";
+import { useFmGetTransferMarket, useListTransfers, useMakeTransferOffer } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRightLeft, TrendingUp } from "lucide-react";
 
@@ -11,7 +11,7 @@ function OvrBadge({ ovr }: { ovr: number }) {
 const POSITIONS = ["", "GK", "CB", "RB", "LB", "CDM", "CM", "CAM", "RM", "LM", "RW", "LW", "ST", "CF"];
 
 export default function Transfers() {
-  const { data: market, isLoading: marketLoading } = useGetTransferMarket();
+  const { data: market, isLoading: marketLoading } = useFmGetTransferMarket();
   const { data: history } = useListTransfers();
   const makeOffer = useMakeTransferOffer();
   const qc = useQueryClient();
@@ -30,7 +30,7 @@ export default function Transfers() {
       data: { playerId: offerPlayer.id, offerAmount, offeredSalary: offerPlayer.weeklySalary }
     });
     setOfferResult(res);
-    qc.invalidateQueries({ queryKey: ["getTransferMarket"] });
+    qc.invalidateQueries({ queryKey: ["fmGetTransferMarket"] });
     qc.invalidateQueries({ queryKey: ["listTransfers"] });
   };
 

@@ -1,11 +1,11 @@
-import { useListClubs, useSetupGame, getGetGameStateQueryKey } from "@workspace/api-client-react";
+import { useFmListClubs, useSetupGame, getGetGameStateQueryKey } from "@workspace/api-client-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Users, Trophy, MapPin, ChevronRight } from "lucide-react";
 
 export default function ClubSelection() {
-  const { data: clubs, isLoading } = useListClubs();
+  const { data: clubs, isLoading } = useFmListClubs();
   const setupGame = useSetupGame();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
