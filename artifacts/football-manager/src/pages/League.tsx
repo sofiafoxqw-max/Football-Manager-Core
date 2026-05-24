@@ -1,114 +1,108 @@
-import { useGetLeagueStandings, useGetSeasonStats } from "@workspace/api-client-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useGetLeagueStandings } from "@workspace/api-client-react";
+import { Trophy } from "lucide-react";
+
+function FormPill({ result }: { result: string }) {
+  const cls = result === "W" ? "form-W" : result === "D" ? "form-D" : "form-L";
+  return <span className={`fm-badge ${cls}`} style={{ padding: "1px 4px", fontSize: "10px", borderRadius: "2px" }}>{result}</span>;
+}
 
 export default function League() {
-  const { data: league, isLoading: leagueLoading } = useGetLeagueStandings();
-  const { data: stats, isLoading: statsLoading } = useGetSeasonStats();
+  const { data: league, isLoading } = useGetLeagueStandings();
 
-  if (leagueLoading || statsLoading) return <div className="p-8">Loading league data...</div>;
+  if (isLoading) return <div className="flex items-center justify-center h-64" style={{ color: "var(--fm-muted)" }}>Loading...</div>;
+
+  const standings = league?.standings ?? [];
+  const playerClub = standings.find((s: any) => s.isPlayerClub);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight">{league?.leagueName || "League Table"}</h1>
-        <p className="text-muted-foreground mt-2">Season {league?.season} • Week {league?.currentWeek}</p>
+    <div className="h-full flex flex-col">
+      <div className="fm-section-header">
+        <Trophy className="w-3.5 h-3.5" />
+        {(league as any)?.leagueName ?? "Premier League"}
+        {playerClub && (
+          <div className="ml-4 flex items-center gap-3 text-xs">
+            <span style={{ color: "var(--fm-accent)" }}>{(playerClub as any).clubName}</span>
+            <span style={{ color: "var(--fm-muted)" }}>•</span>
+            <span style={{ color: "var(--fm-muted)" }}>
+              {(playerClub as any).position}{["st","nd","rd"][(playerClub as any).position-1] ?? "th"}
+            </span>
+            <span style={{ color: "var(--fm-muted)" }}>•</span>
+            <span style={{ color: "#34d399" }}>{(playerClub as any).points} pts</span>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Card className="bg-card/50 border-border">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border hover:bg-transparent">
-                    <TableHead className="w-[50px] text-center">Pos</TableHead>
-                    <TableHead>Club</TableHead>
-                    <TableHead className="text-center w-[50px]">P</TableHead>
-                    <TableHead className="text-center w-[50px]">W</TableHead>
-                    <TableHead className="text-center w-[50px]">D</TableHead>
-                    <TableHead className="text-center w-[50px]">L</TableHead>
-                    <TableHead className="text-center w-[50px]">GF</TableHead>
-                    <TableHead className="text-center w-[50px]">GA</TableHead>
-                    <TableHead className="text-center w-[50px]">GD</TableHead>
-                    <TableHead className="text-center font-bold w-[50px]">Pts</TableHead>
-                    <TableHead className="w-[120px]">Form</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {league?.standings.map((team) => (
-                    <TableRow key={team.clubId} className={`border-border ${team.isPlayerClub ? 'bg-primary/10 hover:bg-primary/20' : 'hover:bg-muted/50'}`}>
-                      <TableCell className="text-center font-medium">{team.position}</TableCell>
-                      <TableCell className="font-bold">{team.clubName}</TableCell>
-                      <TableCell className="text-center">{team.played}</TableCell>
-                      <TableCell className="text-center">{team.won}</TableCell>
-                      <TableCell className="text-center">{team.drawn}</TableCell>
-                      <TableCell className="text-center">{team.lost}</TableCell>
-                      <TableCell className="text-center">{team.goalsFor}</TableCell>
-                      <TableCell className="text-center">{team.goalsAgainst}</TableCell>
-                      <TableCell className="text-center">{team.goalDifference}</TableCell>
-                      <TableCell className="text-center font-bold">{team.points}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {team.form.map((result, i) => (
-                            <div key={i} className={`w-4 h-4 rounded-sm flex items-center justify-center text-[10px] font-bold ${result === 'W' ? 'bg-green-500 text-white' : result === 'D' ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'}`}>
-                              {result}
-                            </div>
-                          ))}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+      <div className="flex-1 overflow-auto p-4">
+        <div className="fm-panel">
+          <table className="fm-table">
+            <thead>
+              <tr>
+                <th style={{ width: 32 }}>#</th>
+                <th>Club</th>
+                <th>P</th>
+                <th>W</th>
+                <th>D</th>
+                <th>L</th>
+                <th>GF</th>
+                <th>GA</th>
+                <th>GD</th>
+                <th>Pts</th>
+                <th>Form</th>
+              </tr>
+            </thead>
+            <tbody>
+              {standings.map((s: any) => {
+                const isChampions = s.position <= 4;
+                const isEuropa = s.position === 5 || s.position === 6;
+                const isRelegation = s.position >= 18;
+                const posColor = isChampions ? "#3b82f6" : isEuropa ? "#10b981" : isRelegation ? "#ef4444" : "var(--fm-muted)";
+                return (
+                  <tr key={s.clubId}
+                    style={{
+                      background: s.isPlayerClub ? "var(--fm-active-bg)" : undefined,
+                      borderLeft: s.isPlayerClub ? "2px solid var(--fm-accent)" : undefined,
+                    }}>
+                    <td>
+                      <div className="flex items-center gap-1">
+                        <div className="w-0.5 h-3 rounded-full" style={{ background: posColor }} />
+                        <span style={{ color: posColor, fontWeight: "600" }}>{s.position}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{ color: s.isPlayerClub ? "var(--fm-accent)" : "var(--fm-text)", fontWeight: s.isPlayerClub ? "600" : "400" }}>
+                        {s.clubName}
+                      </span>
+                    </td>
+                    <td style={{ color: "var(--fm-muted)" }}>{s.played}</td>
+                    <td style={{ color: "#10b981" }}>{s.won}</td>
+                    <td style={{ color: "#f59e0b" }}>{s.drawn}</td>
+                    <td style={{ color: "#ef4444" }}>{s.lost}</td>
+                    <td style={{ color: "var(--fm-text)" }}>{s.goalsFor}</td>
+                    <td style={{ color: "var(--fm-muted)" }}>{s.goalsAgainst}</td>
+                    <td style={{ color: s.goalDifference >= 0 ? "#34d399" : "#f87171", fontWeight: "600" }}>
+                      {s.goalDifference >= 0 ? "+" : ""}{s.goalDifference}
+                    </td>
+                    <td>
+                      <span style={{ color: s.isPlayerClub ? "var(--fm-accent)" : "var(--fm-text)", fontWeight: "700", fontSize: "14px" }}>
+                        {s.points}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex gap-1">
+                        {(s.recentForm ?? []).map((r: string, i: number) => <FormPill key={i} result={r} />)}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
-        <div className="space-y-8">
-          <Card className="bg-card/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Top Scorers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats?.topScorers.map((player, i) => (
-                  <div key={player.playerId} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="font-mono text-muted-foreground w-4 text-right">{i + 1}</div>
-                      <div>
-                        <div className="font-medium text-sm">{player.playerName}</div>
-                        <div className="text-xs text-muted-foreground">{player.clubName}</div>
-                      </div>
-                    </div>
-                    <div className="font-bold">{player.goals}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Top Assisters</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats?.topAssisters.map((player, i) => (
-                  <div key={player.playerId} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="font-mono text-muted-foreground w-4 text-right">{i + 1}</div>
-                      <div>
-                        <div className="font-medium text-sm">{player.playerName}</div>
-                        <div className="text-xs text-muted-foreground">{player.clubName}</div>
-                      </div>
-                    </div>
-                    <div className="font-bold">{player.assists}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="mt-3 flex items-center gap-4 text-xs" style={{ color: "var(--fm-muted)" }}>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: "#3b82f6" }} /> Champions League</div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: "#10b981" }} /> Europa League</div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: "#ef4444" }} /> Relegation</div>
         </div>
       </div>
     </div>

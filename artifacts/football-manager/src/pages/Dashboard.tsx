@@ -1,140 +1,206 @@
-import { useGetGameState, useGetFinances, useListFixtures, useAdvanceGame, getGetGameStateQueryKey, getListFixturesQueryKey, getGetFinancesQueryKey, getGetLeagueStandingsQueryKey, getGetSquadQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useGetGameState, useGetFinances, useListFixtures, useAdvanceGame, useGetLeagueStandings, getGetGameStateQueryKey, getListFixturesQueryKey, getGetFinancesQueryKey, getGetLeagueStandingsQueryKey, getGetSquadQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Calendar as CalendarIcon, Trophy, ArrowRight, DollarSign, Activity } from "lucide-react";
 import { Link } from "wouter";
+import { CalendarDays, Trophy, DollarSign, Activity, ChevronRight, ArrowRight, AlertTriangle } from "lucide-react";
+
+function FormBadge({ result }: { result: string }) {
+  const cls = result === "W" ? "form-W" : result === "D" ? "form-D" : "form-L";
+  return <span className={`fm-badge ${cls} text-xs`} style={{ padding: "1px 5px", borderRadius: "2px" }}>{result}</span>;
+}
+
+function StatCard({ label, value, sub, color, icon: Icon, href }: {
+  label: string; value: string | number; sub?: string; color?: string; icon?: any; href?: string;
+}) {
+  const content = (
+    <div className="fm-card p-3 hover:border-opacity-80 transition-all" style={{ cursor: href ? "pointer" : "default" }}>
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-xs font-semibold" style={{ color: "var(--fm-muted)" }}>{label}</div>
+          <div className="text-2xl font-bold mt-1" style={{ color: color ?? "var(--fm-text)" }}>{value}</div>
+          {sub && <div className="text-xs mt-0.5" style={{ color: "var(--fm-muted)" }}>{sub}</div>}
+        </div>
+        {Icon && <Icon className="w-4 h-4 mt-0.5" style={{ color: "var(--fm-muted)" }} />}
+      </div>
+      {href && <div className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--fm-accent)" }}>View <ChevronRight className="w-3 h-3" /></div>}
+    </div>
+  );
+  return href ? <Link href={href}>{content}</Link> : content;
+}
 
 export default function Dashboard() {
   const { data: gameState } = useGetGameState();
   const { data: finances } = useGetFinances();
   const { data: fixtures } = useListFixtures();
+  const { data: league } = useGetLeagueStandings();
   const advanceGame = useAdvanceGame();
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
 
   const handleAdvance = () => {
     advanceGame.mutate(undefined, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetGameStateQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getListFixturesQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetFinancesQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetLeagueStandingsQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetSquadQueryKey() });
+        qc.invalidateQueries({ queryKey: getGetGameStateQueryKey() });
+        qc.invalidateQueries({ queryKey: getListFixturesQueryKey() });
+        qc.invalidateQueries({ queryKey: getGetFinancesQueryKey() });
+        qc.invalidateQueries({ queryKey: getGetLeagueStandingsQueryKey() });
+        qc.invalidateQueries({ queryKey: getGetSquadQueryKey() });
       }
     });
   };
 
-  const nextFixture = fixtures?.find(f => f.status === 'scheduled');
-  const recentFixtures = fixtures?.filter(f => f.status === 'completed').slice(-3);
+  const upcomingFixtures = fixtures?.filter(f => f.status === "scheduled").slice(0, 5) ?? [];
+  const recentResults = fixtures?.filter(f => f.status === "completed").slice(-5).reverse() ?? [];
+  const myStanding = league?.standings?.find(s => s.isPlayerClub);
 
-  if (!gameState) return <div>Loading...</div>;
+  if (!gameState) return <div className="flex items-center justify-center h-full" style={{ color: "var(--fm-muted)" }}>Loading...</div>;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="h-full flex flex-col overflow-auto">
+      {/* Header bar */}
+      <div className="p-4 border-b flex items-center justify-between shrink-0" style={{ borderColor: "var(--fm-border)", background: "var(--fm-panel)" }}>
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Manager Hub</h1>
-          <p className="text-muted-foreground mt-2">{gameState.clubName} • Season {gameState.season}</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right mr-4">
-            <div className="font-semibold text-lg">{gameState.currentDate}</div>
-            <div className="text-sm text-muted-foreground">Week {gameState.currentWeek} of {gameState.totalWeeks}</div>
+          <div className="text-lg font-bold" style={{ color: "var(--fm-text)" }}>{gameState.clubName}</div>
+          <div className="text-xs" style={{ color: "var(--fm-muted)" }}>
+            {gameState.leagueName} • Season {gameState.season} • Week {gameState.currentWeek}/{gameState.totalWeeks}
           </div>
-          <Button size="lg" onClick={handleAdvance} disabled={advanceGame.isPending}>
-            {advanceGame.isPending ? "Simulating..." : "Advance Week"}
-          </Button>
+        </div>
+        <div className="flex items-center gap-3">
+          {gameState.injuredCount ? (
+            <div className="flex items-center gap-1 text-xs" style={{ color: "#f87171" }}>
+              <AlertTriangle className="w-3.5 h-3.5" />
+              {gameState.injuredCount} injured
+            </div>
+          ) : null}
+          <button onClick={handleAdvance} disabled={advanceGame.isPending}
+            className="fm-btn fm-btn-primary px-5"
+            style={{ fontSize: "13px" }}>
+            {advanceGame.isPending ? "Simulating..." : "Advance Week →"}
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">League Position</CardTitle>
-            <Trophy className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{gameState.leaguePosition || '-'}</div>
-            <p className="text-xs text-muted-foreground mt-1">{gameState.points || 0} Points</p>
-          </CardContent>
-        </Card>
+      <div className="p-4 space-y-4">
+        {/* Stats row */}
+        <div className="grid grid-cols-4 gap-3">
+          <StatCard label="LEAGUE POSITION" value={gameState.leaguePosition ? `${gameState.leaguePosition}${["st","nd","rd"][gameState.leaguePosition-1] ?? "th"}` : "-"}
+            sub={`${myStanding?.points ?? 0} pts • ${myStanding?.played ?? 0} played`} color="var(--fm-accent)" icon={Trophy} href="/league" />
+          <StatCard label="TRANSFER BUDGET" value={`£${((gameState.transferBudget ?? 0)).toLocaleString()}k`}
+            sub="Available to spend" color="#34d399" icon={DollarSign} href="/finances" />
+          <StatCard label="NEXT MATCH" value={gameState.nextFixtureOpponent ?? "None scheduled"}
+            sub={`${gameState.nextFixtureIsHome ? "Home" : "Away"} • ${gameState.nextFixtureDate ?? ""}`} icon={CalendarDays} href="/fixtures" />
+          <StatCard label="TEAM MORALE" value={gameState.morale ?? "good"} sub="Squad mood" color={
+            gameState.morale === "excellent" ? "#10b981" : gameState.morale === "good" ? "#34d399" : gameState.morale === "okay" ? "#f59e0b" : "#ef4444"
+          } icon={Activity} />
+        </div>
 
-        <Card className="bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Next Fixture</CardTitle>
-            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {nextFixture ? (
-              <>
-                <div className="text-lg font-bold truncate">
-                  {nextFixture.isPlayerClubHome ? nextFixture.awayClubName : nextFixture.homeClubName}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {nextFixture.isPlayerClubHome ? '(H)' : '(A)'} • {nextFixture.date}
-                </p>
-              </>
-            ) : (
-              <div className="text-sm text-muted-foreground">No upcoming fixtures</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Transfer Budget</CardTitle>
-            <DollarSign className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">£{(finances?.transferBudget || 0).toLocaleString()}k</div>
-            <p className="text-xs text-muted-foreground mt-1">Wage Budget: £{(finances?.wageBudget || 0).toLocaleString()}k</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Form</CardTitle>
-            <Activity className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              {recentFixtures?.length ? recentFixtures.map(f => {
+        <div className="grid grid-cols-3 gap-4">
+          {/* Recent Results */}
+          <div className="fm-panel">
+            <div className="fm-section-header">Recent Results</div>
+            <div className="divide-y" style={{ borderColor: "var(--fm-border)" }}>
+              {recentResults.length === 0 && <div className="p-4 text-xs text-center" style={{ color: "var(--fm-muted)" }}>No results yet</div>}
+              {recentResults.map(f => {
                 const isHome = f.isPlayerClubHome;
-                const playerGoals = isHome ? f.homeScore : f.awayScore;
-                const oppGoals = isHome ? f.awayScore : f.homeScore;
-                const result = playerGoals! > oppGoals! ? 'W' : playerGoals === oppGoals ? 'D' : 'L';
+                const isAway = f.isPlayerClubAway;
+                const myScore = isHome ? f.homeScore! : f.awayScore!;
+                const oppScore = isHome ? f.awayScore! : f.homeScore!;
+                const result = myScore > oppScore ? "W" : myScore < oppScore ? "L" : "D";
                 return (
-                  <div key={f.id} className={`w-8 h-8 rounded flex items-center justify-center font-bold text-xs ${result === 'W' ? 'bg-green-500/20 text-green-500' : result === 'D' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-red-500/20 text-red-500'}`}>
-                    {result}
+                  <div key={f.id} className="flex items-center gap-2 p-2 text-xs">
+                    <FormBadge result={result} />
+                    <span style={{ color: "var(--fm-muted)" }}>Wk{f.week}</span>
+                    <span className="flex-1 truncate" style={{ color: "var(--fm-text)" }}>
+                      {isHome ? f.homeClubName : f.awayClubName}
+                    </span>
+                    <span className="font-mono font-bold" style={{ color: "var(--fm-text)" }}>{myScore}-{oppScore}</span>
+                    <span className="truncate" style={{ color: "var(--fm-muted)" }}>
+                      {isHome ? f.awayClubName : f.homeClubName}
+                    </span>
                   </div>
                 );
-              }) : <div className="text-sm text-muted-foreground">No recent matches</div>}
+              })}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <Card className="bg-card/50">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Recent Results</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/fixtures">View All <ArrowRight className="w-4 h-4 ml-2" /></Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentFixtures?.map(f => (
-                  <div key={f.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border">
-                    <div className={`w-1/3 text-right font-medium ${f.isPlayerClubHome ? 'text-primary' : ''}`}>{f.homeClubName}</div>
-                    <div className="w-1/3 text-center font-bold px-4 py-1 bg-muted rounded-md">{f.homeScore} - {f.awayScore}</div>
-                    <div className={`w-1/3 text-left font-medium ${f.isPlayerClubAway ? 'text-primary' : ''}`}>{f.awayClubName}</div>
+          </div>
+
+          {/* Upcoming Fixtures */}
+          <div className="fm-panel">
+            <div className="fm-section-header">
+              Upcoming Fixtures
+              <Link href="/fixtures" className="ml-auto text-xs" style={{ color: "var(--fm-accent)" }}>All <ArrowRight className="inline w-3 h-3" /></Link>
+            </div>
+            <div className="divide-y" style={{ borderColor: "var(--fm-border)" }}>
+              {upcomingFixtures.length === 0 && <div className="p-4 text-xs text-center" style={{ color: "var(--fm-muted)" }}>Season complete</div>}
+              {upcomingFixtures.map(f => {
+                const isHome = f.isPlayerClubHome;
+                const isAway = f.isPlayerClubAway;
+                const isMyMatch = isHome || isAway;
+                return (
+                  <div key={f.id} className="flex items-center gap-2 p-2 text-xs" style={{ opacity: isMyMatch ? 1 : 0.6 }}>
+                    <span className="w-6 font-mono" style={{ color: "var(--fm-muted)" }}>W{f.week}</span>
+                    <span className="flex-1 truncate" style={{ color: isHome ? "var(--fm-accent)" : "var(--fm-text)" }}>{f.homeClubName}</span>
+                    <span style={{ color: "var(--fm-muted)" }}>vs</span>
+                    <span className="flex-1 truncate" style={{ color: isAway ? "var(--fm-accent)" : "var(--fm-text)" }}>{f.awayClubName}</span>
+                    {isMyMatch && (
+                      <Link href={`/fixtures/${f.id}/match`}>
+                        <span className="fm-badge" style={{ background: "var(--fm-accent)", color: "#fff", fontSize: "9px" }}>PLAY</span>
+                      </Link>
+                    )}
                   </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* League snapshot */}
+          <div className="fm-panel">
+            <div className="fm-section-header">
+              League Table
+              <Link href="/league" className="ml-auto text-xs" style={{ color: "var(--fm-accent)" }}>Full <ArrowRight className="inline w-3 h-3" /></Link>
+            </div>
+            <table className="fm-table compact">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Club</th>
+                  <th>P</th>
+                  <th>Pts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {league?.standings?.slice(0, 8).map(s => (
+                  <tr key={s.clubId} style={{ background: s.isPlayerClub ? "var(--fm-active-bg)" : undefined }}>
+                    <td style={{ color: s.position <= 4 ? "#3b82f6" : s.position >= 18 ? "#ef4444" : "var(--fm-muted)", fontWeight: "600" }}>{s.position}</td>
+                    <td style={{ color: s.isPlayerClub ? "var(--fm-accent)" : "var(--fm-text)", fontWeight: s.isPlayerClub ? "600" : "400" }}>
+                      {s.clubName.split(" ").slice(-1)[0]}
+                    </td>
+                    <td style={{ color: "var(--fm-muted)" }}>{s.played}</td>
+                    <td style={{ color: s.isPlayerClub ? "var(--fm-accent)" : "var(--fm-text)", fontWeight: "600" }}>{s.points}</td>
+                  </tr>
                 ))}
-                {!recentFixtures?.length && <div className="text-center text-muted-foreground py-4">No completed fixtures yet.</div>}
-              </div>
-            </CardContent>
-         </Card>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Finances row */}
+        {finances && (
+          <div className="fm-panel">
+            <div className="fm-section-header">Financial Overview</div>
+            <div className="grid grid-cols-5 divide-x p-0" style={{ borderColor: "var(--fm-border)" }}>
+              {[
+                { label: "Transfer Budget", value: `£${(finances.transferBudget ?? 0).toLocaleString()}k`, color: "#34d399" },
+                { label: "Wage Budget", value: `£${(finances.wageBudget ?? 0).toLocaleString()}k pw`, color: "var(--fm-text)" },
+                { label: "Current Wages", value: `£${(finances.currentWeeklyWages ?? 0).toLocaleString()}k pw`, color: finances.currentWeeklyWages > finances.wageBudget ? "#ef4444" : "var(--fm-muted)" },
+                { label: "Season Revenue", value: `£${(finances.seasonRevenue ?? 0).toLocaleString()}k`, color: "#34d399" },
+                { label: "Prize Money (Est.)", value: `£${(finances.prizeMoneyEstimate ?? 0).toLocaleString()}k`, color: "#60a5fa" },
+              ].map(item => (
+                <div key={item.label} className="p-3">
+                  <div className="text-xs" style={{ color: "var(--fm-muted)" }}>{item.label}</div>
+                  <div className="text-sm font-bold mt-0.5" style={{ color: item.color }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

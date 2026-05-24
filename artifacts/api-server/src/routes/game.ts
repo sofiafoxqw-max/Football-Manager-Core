@@ -64,10 +64,30 @@ router.get("/game/state", async (req, res) => {
     and(eq(inboxTable.clubId, state.clubId), eq(inboxTable.isRead, false))
   );
 
+  // Injured count
+  const allPlayers = await db.select({ isInjured: playersTable.isInjured, injuryWeeksLeft: playersTable.injuryWeeksLeft, morale: playersTable.morale })
+    .from(playersTable).where(eq(playersTable.clubId, state.clubId));
+  const injuredCount = allPlayers.filter(p => p.injuryWeeksLeft > 0).length;
+  const moraleMap: Record<string, number> = { excellent: 5, happy: 4, good: 3, okay: 2, neutral: 2, unhappy: 1, sad: 0 };
+  const avgMorale = allPlayers.length
+    ? allPlayers.reduce((s, p) => s + (moraleMap[p.morale] ?? 3), 0) / allPlayers.length
+    : 3;
+  const teamMorale = avgMorale >= 4.5 ? "excellent" : avgMorale >= 3.5 ? "good" : avgMorale >= 2.5 ? "okay" : "poor";
+
+  const clubs2 = await db.select().from(clubsTable).where(eq(clubsTable.id, state.clubId));
+  const myClub = clubs2[0];
+
+  const nextOpponentId = playerNextFixture
+    ? (playerNextFixture.homeClubId === state.clubId ? playerNextFixture.awayClubId : playerNextFixture.homeClubId)
+    : null;
+  const allClubNames = await db.select({ id: clubsTable.id, name: clubsTable.name }).from(clubsTable);
+  const clubNameMap = Object.fromEntries(allClubNames.map(c => [c.id, c.name]));
+
   return res.json({
     started: true,
     clubId: state.clubId,
     clubName: club?.name ?? null,
+    managerName: state.managerName ?? null,
     leagueName: league?.name ?? null,
     currentDate: state.currentDate,
     currentWeek: state.currentWeek,
@@ -76,7 +96,13 @@ router.get("/game/state", async (req, res) => {
     leaguePosition: myStanding?.position ?? null,
     points: myStanding?.points ?? 0,
     nextFixtureId: playerNextFixture?.id ?? null,
+    nextFixtureOpponent: nextOpponentId ? (clubNameMap[nextOpponentId] ?? null) : null,
+    nextFixtureDate: playerNextFixture?.date ?? null,
+    nextFixtureIsHome: playerNextFixture ? playerNextFixture.homeClubId === state.clubId : null,
     unreadMessages: unreadCount.length,
+    transferBudget: myClub?.budget ?? null,
+    injuredCount,
+    morale: teamMorale,
   });
 });
 
@@ -94,6 +120,7 @@ router.get("/game/clubs", async (_req, res) => {
     stadiumName: c.stadiumName,
     stadiumCapacity: c.stadiumCapacity,
     colors: c.colors,
+    description: c.description ?? "",
   })));
 });
 

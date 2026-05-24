@@ -6,6 +6,7 @@ export const playersTable = pgTable("players", {
   age: integer("age").notNull(),
   nationality: text("nationality").notNull(),
   position: text("position").notNull(),
+  preferredFoot: text("preferred_foot").notNull().default("right"),
   overall: integer("overall").notNull(),
   potential: integer("potential").notNull(),
   pace: integer("pace").notNull().default(50),
@@ -26,6 +27,13 @@ export const playersTable = pgTable("players", {
   seasonAppearances: integer("season_appearances").notNull().default(0),
   clubId: integer("club_id").notNull(),
   isOnTransferList: boolean("is_on_transfer_list").notNull().default(false),
+  isInjured: boolean("is_injured").notNull().default(false),
+  injuryWeeksLeft: integer("injury_weeks_left").notNull().default(0),
+  injuryType: text("injury_type"),
+  role: text("role").notNull().default(""),
+  trainingFocus: text("training_focus"),
+  trainingProgress: integer("training_progress").notNull().default(0),
+  playerDescription: text("player_description").notNull().default(""),
 });
 
 export type Player = typeof playersTable.$inferSelect;

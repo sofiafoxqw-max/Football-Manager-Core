@@ -6,3 +6,7 @@ export * from "./tactics";
 export * from "./fixtures";
 export * from "./transfers";
 export * from "./inbox";
+export * from "./training";
+export * from "./shortlist";
+export * from "./staff";
+export * from "./setPieces";

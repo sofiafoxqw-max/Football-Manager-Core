@@ -12,6 +12,7 @@ export const clubsTable = pgTable("clubs", {
   stadiumName: text("stadium_name").notNull(),
   stadiumCapacity: integer("stadium_capacity").notNull().default(30000),
   colors: text("colors").notNull().default("#1a73e8"),
+  description: text("description").notNull().default(""),
   transferIncome: integer("transfer_income").notNull().default(0),
   transferSpend: integer("transfer_spend").notNull().default(0),
   matchdayRevenue: integer("matchday_revenue").notNull().default(0),

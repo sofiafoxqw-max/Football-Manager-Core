@@ -8,6 +8,14 @@ import leagueRouter from "./league";
 import transfersRouter from "./transfers";
 import inboxRouter from "./inbox";
 import financesRouter from "./finances";
+import trainingRouter from "./training";
+import injuriesRouter from "./injuries";
+import scoutingRouter from "./scouting";
+import contractsRouter from "./contracts";
+import setPiecesRouter from "./setpieces";
+import staffRouter from "./staff";
+import pressconfRouter from "./pressconf";
+import matchdayRouter from "./matchday";
 
 const router: IRouter = Router();
 
@@ -20,5 +28,13 @@ router.use(leagueRouter);
 router.use(transfersRouter);
 router.use(inboxRouter);
 router.use(financesRouter);
+router.use(trainingRouter);
+router.use(injuriesRouter);
+router.use(scoutingRouter);
+router.use(contractsRouter);
+router.use(setPiecesRouter);
+router.use(staffRouter);
+router.use(pressconfRouter);
+router.use(matchdayRouter);
 
 export default router;
