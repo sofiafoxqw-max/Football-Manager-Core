@@ -40,13 +40,21 @@ export default function Staff() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"current" | "market">("current");
   const [hiring, setHiring] = useState<number | null>(null);
+  const [hireError, setHireError] = useState<string | null>(null);
 
   const handleHire = async (staffId: number) => {
     setHiring(staffId);
-    await hireStaff.mutateAsync({ data: { staffId } });
-    qc.invalidateQueries({ queryKey: ["getStaff"] });
-    qc.invalidateQueries({ queryKey: ["getStaffMarket"] });
-    setHiring(null);
+    setHireError(null);
+    try {
+      await hireStaff.mutateAsync({ data: { staffId } });
+      qc.invalidateQueries({ queryKey: ["getStaff"] });
+      qc.invalidateQueries({ queryKey: ["getStaffMarket"] });
+    } catch (err: any) {
+      const msg = err?.errorData?.error ?? err?.message ?? "Failed to hire staff member.";
+      setHireError(msg);
+    } finally {
+      setHiring(null);
+    }
   };
 
   const renderTable = (members: any[], showHire: boolean) => (
@@ -148,11 +156,18 @@ export default function Staff() {
         )}
 
         {tab === "market" && (
-          <div className="fm-panel">
-            <div className="p-2 border-b text-xs" style={{ borderColor: "var(--fm-border)", color: "var(--fm-muted)" }}>
-              AVAILABLE STAFF — click Hire to add to your backroom team
+          <div className="space-y-2">
+            {hireError && (
+              <div className="fm-panel p-3 text-sm" style={{ color: "#ef4444", border: "1px solid #ef444444", background: "#ef444411" }}>
+                ⚠ {hireError}
+              </div>
+            )}
+            <div className="fm-panel">
+              <div className="p-2 border-b text-xs" style={{ borderColor: "var(--fm-border)", color: "var(--fm-muted)" }}>
+                AVAILABLE STAFF — click Hire to add to your backroom team
+              </div>
+              {renderTable(market ?? [], true)}
             </div>
-            {renderTable(market ?? [], true)}
           </div>
         )}
       </div>
